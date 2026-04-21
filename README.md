@@ -19,6 +19,12 @@ Open: http://127.0.0.1:5174
   - GitHub pinned repo helper
 - You *can* still put the code on GitHub and deploy it via a Node host that pulls from GitHub.
 
+## GitHub Pages (landing page)
+
+This repo is configured to publish `/docs` via GitHub Pages:
+
+- https://klajdi24.github.io/portfolio-generator/
+
 ## Recommended deployment (GitHub → Render)
 
 1. Create a GitHub repo (e.g. `portfolio-generator`) and push this folder.
@@ -30,6 +36,8 @@ Open: http://127.0.0.1:5174
    - `OPENAI_API_KEY` = your key (Render secret)
    - `OPENAI_MODEL` (optional) e.g. `gpt-4o-mini`
 5. Deploy. Render will assign you a public URL.
+
+Then update `docs/index.html` to link to the Render URL.
 
 ### If you want GitHub Pages too
 
