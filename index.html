@@ -9,71 +9,159 @@
 </head>
 <body>
   <div class="app" id="app">
-    <!-- MAIN AREA -->
-    <main class="stage">
-
-      <div class="stage-grid">
-
-      <!-- AI STUDIO -->
-      <section class="ai-revision panel-like studio-col">
-        <div class="ai-revision-header">
-          <div>
-            <p class="eyebrow">AI STUDIO</p>
-            <h2>Build your portfolio</h2>
-            <p class="muted small">
-              <strong>Quick start:</strong> 1) Add your CV → 2) Enrich (media / GitHub) → 3) Pick a style → 4) Generate → 5) Refine → 6) Export.
-            </p>
-
-            <nav class="stepper" aria-label="Portfolio build steps">
-              <button type="button" class="stepper-btn" data-scroll="#stepCv"><span class="stepper-num">1</span>CV</button>
-              <button type="button" class="stepper-btn" data-scroll="#advancedPanel"><span class="stepper-num">2</span>Enrich</button>
-              <button type="button" class="stepper-btn" data-scroll="#stepStyle"><span class="stepper-num">3</span>Style</button>
-              <button type="button" class="stepper-btn" data-scroll="#stepGenerate"><span class="stepper-num">4</span>Generate</button>
-              <button type="button" class="stepper-btn" data-scroll="#refinePanel"><span class="stepper-num">5</span>Refine</button>
-            </nav>
-          </div>
-          <div class="toolbar-right">
-            <button type="button" id="demoBtn" class="toolbar-btn" title="Runs a reliable demo flow">Demo mode</button>
-            <button type="button" id="baselineBtn" class="toolbar-btn" title="Generate a baseline (no-LLM) version for comparison">Baseline</button>
-            <button type="button" id="exportBtn" class="toolbar-btn primary">Export HTML</button>
-            <button type="button" id="exportZipBtn" class="toolbar-btn">Export ZIP</button>
-          </div>
+    <header class="top-header">
+      <div class="top-left">
+        <div class="brand">
+          <div class="brand-mark">PortfolioForge AI</div>
+          <div class="brand-sub">Generate a portfolio draft from your CV, projects, and style prompt.</div>
         </div>
+      </div>
+      <div class="toolbar-right">
+        <button type="button" id="demoBtn" class="toolbar-btn" title="Runs a reliable demo flow">Demo</button>
+        <button type="button" id="baselineBtn" class="toolbar-btn" title="Generate a baseline (no-LLM) version for comparison">Baseline</button>
+        <button type="button" id="exportBtn" class="toolbar-btn primary">Export HTML</button>
+        <button type="button" id="exportZipBtn" class="toolbar-btn">Export ZIP</button>
+      </div>
+    </header>
 
-        <div class="ai-studio-grid">
-          <section class="panel" id="stepCv">
-            <div class="panel-row">
-              <h2>Step 1 — Add your CV</h2>
-              <button type="button" id="useSampleBtn" class="small-btn">Use Sample CV</button>
+    <div class="stage">
+      <section class="builder-hero">
+        <p class="eyebrow">AI Studio</p>
+        <h1>Build your portfolio</h1>
+        <p>Upload your CV, describe your style, and generate a polished portfolio draft you can export as static HTML.</p>
+      </section>
+
+      <div class="workspace-grid">
+        <main class="flow-column" aria-label="Builder flow">
+          <section class="flow-card primary-step" id="stepCv">
+            <div class="card-head">
+              <h2>Start with your CV</h2>
+              <button type="button" id="useSampleBtn" class="small-btn">Use sample</button>
             </div>
-            <label for="cvFile">Upload CV (.txt / .md / .pdf)</label>
-            <input id="cvFile" type="file" accept=".txt,.md,.pdf" />
-            <p class="help">TXT/MD loads automatically. PDF will be parsed server-side with AI (best quality) and then filled into the box.</p>
+            <p class="help">Supported: <strong>.txt</strong>, <strong>.md</strong>, <strong>.pdf</strong>. PDF extraction may take a moment.</p>
+
+            <div id="cvDropZone" class="drop-zone cv-drop" tabindex="0" aria-label="CV upload drop zone">
+              <div>
+                <strong>Drop your CV here</strong>
+                <div class="help">or</div>
+                <label class="small-btn" style="display:inline-block; margin-top:8px;">
+                  Choose file
+                  <input id="cvFile" type="file" accept=".txt,.md,.pdf" style="display:none;" />
+                </label>
+              </div>
+            </div>
+
             <div class="help status-banner" id="uploadStatus" data-kind="idle" role="status" aria-live="polite">Upload status: —</div>
-            <label for="cvText">Or paste CV text</label>
-            <div class="panel-row" style="margin-top:10px; gap:12px; align-items:center;">
-              <label class="toggle" style="margin:0; text-transform:none; letter-spacing:0;">
-                <input type="checkbox" id="manualEditToggle" />
-                <span>Manual edit (advanced)</span>
-              </label>
-            </div>
-            <textarea id="cvText" rows="10" placeholder="Paste your CV / resume text here..."></textarea>
             <p class="help" id="cvSourceNote">CV source: —</p>
+
+            <details class="panel-details inline-advanced" id="cvAdvanced">
+              <summary>
+                <div>
+                  <strong>Advanced:</strong> paste or edit CV text
+                  <div class="help">Use if your CV upload is messy, or you want to tweak extracted text.</div>
+                </div>
+              </summary>
+              <div class="details-body">
+                <label class="toggle" style="margin:0 0 10px;">
+                  <input type="checkbox" id="manualEditToggle" />
+                  <span>Enable manual editing</span>
+                </label>
+                <label for="cvText">CV text</label>
+                <textarea id="cvText" rows="8" placeholder="Paste your CV / resume text here..."></textarea>
+              </div>
+            </details>
           </section>
 
-          <details class="panel panel-details" id="advancedPanel">
+          <section class="flow-card primary-step" id="stepStyle">
+            <div class="card-head">
+              <h2>Describe your portfolio</h2>
+            </div>
+            <p class="help">Tell the AI the mood, audience, and layout preference. Keep it short and specific.</p>
+            <label for="aiPrompt">Style prompt</label>
+            <textarea
+              id="aiPrompt"
+              rows="4"
+              placeholder='Example: "Dark cinematic portfolio for a game environment artist with moody lighting and poster-style project cards."'
+            ></textarea>
+            <div class="chips" id="promptChips">
+              <button type="button" class="chip" data-prompt="Professional, clean, recruiter-friendly portfolio. Strong hierarchy, minimal motion, concise project cards with outcomes and tools." data-preset="mono">Professional</button>
+              <button type="button" class="chip" data-prompt="Dark, cinematic, premium and atmospheric. Poster-style hero. Visual-first project cards. Strong contrast. Subtle amber accents." data-preset="cinematic">Dark Cinematic</button>
+              <button type="button" class="chip" data-prompt="Minimal black and white, elegant and spacious. Subtle motion. Clear typography and simple cards." data-preset="mono">Minimal</button>
+              <button type="button" class="chip" data-prompt="Creative studio portfolio. Modern, premium, slightly playful. Gallery-like project cards. Plenty of whitespace." data-preset="playful">Creative Studio</button>
+              <button type="button" class="chip" data-prompt="Gallery portfolio. Visual-first cards with strong imagery. Spacious layout. Subtle motion." data-preset="cinematic">Gallery</button>
+              <button type="button" class="chip" data-prompt="Case study portfolio. Each project shows problem, approach, tools, and result. Recruiter-friendly." data-preset="blue">Case Study</button>
+            </div>
+
+            <details class="panel-details inline-advanced" id="styleControls">
+              <summary>
+                <div>
+                  <strong>More style controls</strong>
+                  <div class="help">Optional layout and motion settings.</div>
+                </div>
+              </summary>
+              <div class="details-body">
+                <div class="controls-grid">
+                  <div>
+                    <label for="layoutSelect">Layout</label>
+                    <select id="layoutSelect">
+                      <option value="auto">Auto</option>
+                      <option value="showcase">Showcase</option>
+                      <option value="recruiter">Recruiter</option>
+                      <option value="case-study">Case Study</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="motionSelect">Motion</label>
+                    <select id="motionSelect">
+                      <option value="auto">Auto</option>
+                      <option value="subtle">Subtle</option>
+                      <option value="dynamic">Dynamic</option>
+                      <option value="cinematic">Cinematic</option>
+                      <option value="extreme">Extreme</option>
+                      <option value="playful">Playful</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </section>
+
+          <section class="flow-card generate-step" id="stepGenerate">
+            <div class="card-head">
+              <h2>Generate your portfolio</h2>
+            </div>
+            <p class="help">Ready when your CV is provided and your prompt describes the style you want.</p>
+
+            <button type="button" id="generateBtn" class="generate-btn">Generate portfolio</button>
+
+            <details class="panel-details inline-advanced" id="moreControls">
+              <summary>
+                <div>
+                  <strong>After generation</strong>
+                  <div class="help">Optional: regenerate style or content without redoing uploads.</div>
+                </div>
+              </summary>
+              <div class="details-body">
+                <div class="row-actions" style="margin-top:12px;">
+                  <button type="button" id="regenStyleBtn" class="small-btn">Regenerate style</button>
+                  <button type="button" id="regenContentBtn" class="small-btn">Regenerate content</button>
+                </div>
+              </div>
+            </details>
+          </section>
+
+          <details class="accordion-card" id="advancedPanel">
             <summary>
               <div>
-                <h2 style="margin:0;">Step 2 — Enrich (recommended)</h2>
-                <p class="help" style="margin:6px 0 0;">Media + GitHub import makes your projects look real (and improves the output).</p>
+                <h2 style="margin:0;">Improve output with media and GitHub</h2>
+                <p class="help" style="margin:6px 0 0;">Optional: add images, videos, or GitHub projects for richer cards.</p>
+                <div class="accordion-meta" id="enrichMeta">No media added · GitHub not connected</div>
               </div>
-              <div class="summary-right"><span class="summary-hint" aria-hidden="true"></span></div>
             </summary>
-
             <div class="details-body">
-                <section class="panel subpanel" id="mediaPanel">
-                  <h2>Project Media</h2>
-                <p class="help">Drag in images/videos. We’ll auto-match them to projects, you can edit assignments.</p>
+              <section class="panel subpanel" id="mediaPanel">
+                <h2>Project media</h2>
+                <p class="help">Upload images/videos, then assign them to projects (auto-match included).</p>
                 <div id="dropZone" class="drop-zone" tabindex="0">
                   <div>
                     <strong>Drop files here</strong>
@@ -89,12 +177,12 @@
               </section>
 
               <section class="panel subpanel" id="githubPanel">
-                <h2>Import from GitHub</h2>
-                <p class="help">Pull public repos and convert them into portfolio-ready project entries. (No token needed for public repos.)</p>
+                <h2>GitHub import</h2>
+                <p class="help">Pull public repos and convert them into portfolio-ready project entries.</p>
                 <label for="ghUser">GitHub username</label>
-                <input id="ghUser" type="text" placeholder="e.g. klajdi-dev" />
-                <div class="panel-row" style="margin-top:10px; gap:10px; align-items:center;">
-                  <label class="toggle" style="margin:0; text-transform:none; letter-spacing:0;">
+                <input id="ghUser" type="text" placeholder="e.g. klajdi24" />
+                <div class="panel-row" style="margin-top:10px; gap:10px; align-items:center; flex-wrap:wrap;">
+                  <label class="toggle" style="margin:0;">
                     <input type="checkbox" id="ghIncludeForks" />
                     <span>Include forks</span>
                   </label>
@@ -104,11 +192,44 @@
                 <div class="help status-banner" id="ghStatus" data-kind="idle" role="status" aria-live="polite">GitHub: —</div>
                 <div id="ghRepoList" class="assignments scroll-box"></div>
               </section>
+            </div>
+          </details>
 
+          <details class="accordion-card" id="refinePanel">
+            <summary>
+              <div>
+                <h2 style="margin:0;">Refine & polish (after generate)</h2>
+                <p class="help" style="margin:6px 0 0;">Ask for targeted improvements once you have a first draft.</p>
+              </div>
+            </summary>
+            <div class="details-body">
+              <section class="panel subpanel">
+                <h2>Revision request</h2>
+                <textarea id="changeRequest" rows="3" placeholder='Example: "Make it more premium and reduce motion."'></textarea>
+                <div class="chips" id="revisionChips">
+                  <button type="button" class="chip" data-revision="Make it more professional and recruiter-friendly for job applications.">Recruiter Focus</button>
+                  <button type="button" class="chip" data-revision="Make it blue, premium and modern with clean cards and smoother animations.">Blue Premium Polish</button>
+                  <button type="button" class="chip" data-revision="Reduce motion and make it cleaner and more minimal.">Reduce Motion</button>
+                  <button type="button" class="chip" data-revision="Make project cards stronger with outcomes, tools and clearer structure.">Improve Project Cards</button>
+                </div>
+                <button type="button" id="applyChangeBtn" class="toolbar-btn">Apply changes</button>
+              </section>
+            </div>
+          </details>
+
+          <details class="accordion-card" id="toolsPanel">
+            <summary>
+              <div>
+                <h2 style="margin:0;">Advanced checks and export tools</h2>
+                <p class="help" style="margin:6px 0 0;">Optional: QA tools, model settings, and debug output.</p>
+                <div class="accordion-meta" id="toolsMeta">—</div>
+              </div>
+            </summary>
+            <div class="details-body">
               <section class="panel subpanel" id="qcPanel">
                 <h2>Quality checks</h2>
                 <p class="help">Quick checks to make sure the output is usable for new users.</p>
-                <div class="panel-row" style="margin-top:10px; gap:10px; align-items:center;">
+                <div class="panel-row" style="margin-top:10px; gap:10px; align-items:center; flex-wrap:wrap;">
                   <button type="button" id="qcRunBtn" class="small-btn">Run checks</button>
                   <button type="button" id="qcTestBtn" class="small-btn">Run CV test set</button>
                 </div>
@@ -116,7 +237,7 @@
               </section>
 
               <section class="panel subpanel" id="llmPanel">
-                <h2>LLM Mode</h2>
+                <h2>LLM mode</h2>
                 <label class="toggle">
                   <input type="checkbox" id="llmToggle" checked />
                   <span>Use OpenAI generation</span>
@@ -125,148 +246,83 @@
                 <label class="toggle"><input type="checkbox" id="streamToggle" checked /> <span>Stream response</span></label>
                 <div id="llmStatus" class="help status-banner" data-kind="busy" role="status" aria-live="polite">LLM status: checking…</div>
               </section>
+
+              <div class="ai-log" id="aiLog">
+                <p class="help">Generation details appear here after you generate.</p>
+              </div>
+
+              <details class="ai-log" id="debugPanel">
+                <summary>Parsed CV (debug)</summary>
+                <pre id="parsedDebug" style="white-space:pre-wrap"></pre>
+              </details>
             </div>
           </details>
+        </main>
 
-          <section class="panel" id="stepStyle">
-            <h2>Step 3 — Choose a style</h2>
-            <label for="aiPrompt">Describe the portfolio you want</label>
-            <textarea
-              id="aiPrompt"
-              rows="4"
-              placeholder='Example: "Make it dark, cinematic, premium and atmospheric."'
-            ></textarea>
-            <div class="chips" id="promptChips">
-              <button type="button" class="chip" data-prompt="Make it blue, modern, premium and recruiter-friendly with smooth animations and clean project cards." data-preset="blue" onclick="const p=this.dataset.prompt; const t=document.querySelector('#aiPrompt'); if(t){t.value=p;} if(window.state){state.prompt=p; state.stylePreset='blue';}">Blue Premium</button>
-              <button type="button" class="chip" data-prompt="Make it dark, cinematic and bold for a creative developer with polished motion and strong contrast." data-preset="cinematic" onclick="const p=this.dataset.prompt; const t=document.querySelector('#aiPrompt'); if(t){t.value=p;} if(window.state){state.prompt=p; state.stylePreset='cinematic';}">Dark Cinematic</button>
-              <button type="button" class="chip" data-prompt="Playful UX portfolio template. Bright, high-contrast but tasteful (no mud). Rounded cards, friendly modern typography, clear information hierarchy. Layout: hero with name, title, 2-line summary, then Selected Work (3–6 projects), then Experience, then Skills, then Education. Each project must have: title, 1-line outcome, role, tools used. Use plenty of whitespace, strong headings, and consistent spacing. Keep the tone professional but energetic." data-preset="playful" onclick="const p=this.dataset.prompt; const t=document.querySelector('#aiPrompt'); if(t){t.value=p;} if(window.state){state.prompt=p; state.stylePreset='playful';}">Playful UX</button>
-              <button type="button" class="chip" data-prompt="Make it minimal black and white, elegant and professional with subtle animation." data-preset="mono" onclick="const p=this.dataset.prompt; const t=document.querySelector('#aiPrompt'); if(t){t.value=p;} if(window.state){state.prompt=p; state.stylePreset='mono';}">Minimal Mono</button>
-              <button type="button" class="chip" data-prompt="Cinematic dark studio portfolio with extreme motion. Poster split hero, editorial typography, deep charcoal base, muted steel-blue shadows, subtle amber accents only. Animated background layers (slow drifting light blooms, parallax grid, film grain flicker). Hero art should feel like key art with vignette and light bloom. Project cards are visual-first cinematic galleries with light sweeps and depth. Emphasize Selected Work → Process → Experience. No recruiter framing. No bright flat yellow blocks." data-preset="cinematic" onclick="const p=this.dataset.prompt; const t=document.querySelector('#aiPrompt'); if(t){t.value=p;} if(window.state){state.prompt=p; state.stylePreset='cinematic';}">LLM Cinematic Max</button>
-            </div>
-          </section>
+        <aside class="status-column">
+          <section class="preview-card">
+            <section class="insights">
+              <div class="insight"><span>Theme</span><strong id="themeInfo">—</strong></div>
+              <div class="insight"><span>Layout</span><strong id="layoutInfo">—</strong></div>
+              <div class="insight"><span>Motion</span><strong id="motionInfo">—</strong></div>
+              <div class="insight"><span>Extraction</span><strong id="extractInfo">No CV parsed yet</strong></div>
+            </section>
 
-          <section class="panel" id="stepGenerate">
-            <h2>Step 4 — Generate</h2>
-            <div class="help status-banner" id="preflightStatus" data-kind="idle" role="status" aria-live="polite">Pre-flight: —</div>
-            <div id="preflightList" class="preflight"></div>
-            <div class="controls-grid">
-              <div>
-                <label for="layoutSelect">Layout</label>
-                <select id="layoutSelect">
-                  <option value="auto">Auto</option>
-                  <option value="showcase">Showcase</option>
-                  <option value="recruiter">Recruiter</option>
-                  <option value="case-study">Case Study</option>
-                </select>
+            <section class="preview-shell">
+              <div class="loading-state hidden" id="loadingState">
+                <p>Generating portfolio…</p>
+                <div class="loading-bar"><span></span></div>
               </div>
-              <div>
-                <label for="motionSelect">Motion</label>
-                <select id="motionSelect">
-                  <option value="auto">Auto</option>
-                  <option value="subtle">Subtle</option>
-                  <option value="dynamic">Dynamic</option>
-                  <option value="cinematic">Cinematic</option>
-                  <option value="extreme">Extreme</option>
-                  <option value="playful">Playful</option>
-                </select>
-              </div>
-            </div>
-            <div class="ai-actions sticky-generate" style="margin-top:14px;">
-              <button type="button" id="generateBtn" class="generate-btn">Generate Portfolio</button>
-              <div class="footer-actions">
-                <button type="button" id="regenStyleBtn" class="small-btn grow">Regenerate Style</button>
-                <button type="button" id="regenContentBtn" class="small-btn grow">Regenerate Content</button>
-              </div>
-            </div>
-          </section>
-
-          <details class="panel panel-details" id="refinePanel">
-            <summary>
-              <div>
-                <h2 style="margin:0;">Step 5 — Refine & polish</h2>
-                <p class="help" style="margin:6px 0 0;">Once you have a first draft, ask the AI to make targeted improvements.</p>
-              </div>
-              <div class="summary-right"><span class="summary-hint" aria-hidden="true"></span></div>
-            </summary>
-            <div class="details-body">
-              <section class="panel subpanel">
-                <h2>Revision Request</h2>
-                <textarea id="changeRequest" rows="3" placeholder='Type a revision request... e.g. "Make it more atmospheric and cinematic."'></textarea>
-                <div class="chips" id="revisionChips">
-                  <button type="button" class="chip" data-revision="Make it more professional and recruiter-friendly for job applications.">Recruiter Focus</button>
-                  <button type="button" class="chip" data-revision="Make it blue, premium and modern with clean cards and smoother animations.">Blue Premium Polish</button>
-                  <button type="button" class="chip" data-revision="Reduce motion and make it cleaner and more minimal.">Reduce Motion</button>
-                  <button type="button" class="chip" data-revision="Make project cards stronger with outcomes, tools and clearer structure.">Improve Project Cards</button>
+              <div class="empty-state" id="emptyState">
+                <div class="empty-card cinematic-intro">
+                  <p class="eyebrow">AI STUDIO</p>
+                  <h2>Start by adding your CV</h2>
+                  <p>PortfolioForge will extract your projects, skills, and experience, then generate a portfolio from your style prompt.</p>
+                  <div class="empty-actions">
+                    <button type="button" id="emptySampleBtn" class="toolbar-btn">Use sample CV</button>
+                  </div>
                 </div>
-                <button type="button" id="applyChangeBtn" class="toolbar-btn">Apply AI Changes</button>
-              </section>
-            </div>
-          </details>
-        </div>
+              </div>
 
-        <div class="ai-log" id="aiLog">
-          <p class="help">AI log will appear here after generation / revision.</p>
-        </div>
-        <details class="ai-log" id="debugPanel">
-          <summary>Parsed CV (debug)</summary>
-          <pre id="parsedDebug" style="white-space:pre-wrap"></pre>
-        </details>
-      </section>
+              <div id="preview" class="preview hidden"></div>
+            </section>
 
-
-      <!-- INSIGHTS -->
-      <div class="preview-col">
-        <section class="insights">
-          <div class="insight"><span>Theme</span><strong id="themeInfo">—</strong></div>
-          <div class="insight"><span>Layout</span><strong id="layoutInfo">—</strong></div>
-          <div class="insight"><span>Motion</span><strong id="motionInfo">—</strong></div>
-          <div class="insight"><span>Extraction</span><strong id="extractInfo">No CV parsed yet</strong></div>
-        </section>
-
-        <!-- PREVIEW -->
-        <section class="preview-shell">
-        <div class="loading-state hidden" id="loadingState">
-          <p>Generating portfolio…</p>
-          <div class="loading-bar"><span></span></div>
-        </div>
-        <div class="empty-state" id="emptyState">
-          <div class="empty-card cinematic-intro">
-            <p class="eyebrow">CINEMATIC AI STUDIO</p>
-            <h2>Generate a full portfolio draft</h2>
-            <p>
-              Build from CV + natural language prompt, then refine by asking the AI for changes.
-            </p>
-            <div class="empty-actions">
-              <button type="button" id="emptySampleBtn" class="toolbar-btn">Use Sample CV</button>
-              <button type="button" id="emptyGenerateBtn" class="toolbar-btn primary">Generate Now</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="preview" class="preview hidden"></div>
-
-        <!-- Project modal (opens when clicking a project card) -->
-        <div id="projectModal" class="modal hidden" aria-hidden="true">
-          <div class="modal-backdrop" data-modal-close="1"></div>
-          <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-            <button type="button" class="modal-close" aria-label="Close" data-modal-close="1">×</button>
-            <div class="modal-content">
-              <div class="modal-media" id="modalMedia"></div>
-              <div class="modal-copy">
-                <h3 id="modalTitle">Project</h3>
-                <div class="modal-meta" id="modalMeta"></div>
-                <p class="modal-desc" id="modalDesc"></p>
-                <div class="modal-actions" id="modalActions"></div>
+            <!-- Project modal (opens when clicking a project card) -->
+            <div id="projectModal" class="modal hidden" aria-hidden="true">
+              <div class="modal-backdrop" data-modal-close="1"></div>
+              <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+                <button type="button" class="modal-close" aria-label="Close" data-modal-close="1">×</button>
+                <div class="modal-content">
+                  <div class="modal-media" id="modalMedia"></div>
+                  <div class="modal-copy">
+                    <h3 id="modalTitle">Project</h3>
+                    <div class="modal-meta" id="modalMeta"></div>
+                    <p class="modal-desc" id="modalDesc"></p>
+                    <div class="modal-actions" id="modalActions"></div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      </div>
+          <section class="readiness-card">
+            <h2 style="margin:0 0 10px;">Portfolio readiness</h2>
+            <div class="help status-banner" id="preflightStatus" data-kind="idle" role="status" aria-live="polite">Portfolio readiness: —</div>
+            <div id="preflightList" class="preflight"></div>
+          </section>
 
+          <section class="tips-card">
+            <h2 style="margin:0 0 10px;">Prompt tips</h2>
+            <ul class="tips">
+              <li>Say who it’s for: <strong>recruiter</strong>, <strong>creative studio</strong>, or <strong>case study</strong>.</li>
+              <li>Describe the vibe: <strong>minimal</strong>, <strong>cinematic</strong>, <strong>gallery</strong>, <strong>premium</strong>.</li>
+              <li>Specify cards: outcomes, tools, role, links.</li>
+            </ul>
+            <p class="help" style="margin-top:10px;">Optional: add media + GitHub projects in “Improve output…” for a stronger result.</p>
+          </section>
+        </aside>
       </div>
-    </main>
+    </div>
   </div>
 
   <script src="script.js"></script>
