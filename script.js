@@ -2394,8 +2394,6 @@ function init() {
   });
 
   qs("#generateBtn").addEventListener("click", async () => { await renderPortfolio(); });
-  const emptyGen = qs("#emptyGenerateBtn");
-  if (emptyGen) emptyGen.addEventListener("click", async () => { await renderPortfolio(); });
   qs("#applyChangeBtn").addEventListener("click", async () => {
     const change = qs("#changeRequest").value.trim();
     if (change) {
@@ -3085,7 +3083,7 @@ document.addEventListener('click', (e) => {
     qs('#aiPrompt').value = t.dataset.prompt;
     state.prompt = t.dataset.prompt;
   }
-  if (t.id === 'generateBtn' || t.id === 'emptyGenerateBtn') {
+  if (t.id === 'generateBtn') {
     renderPortfolio();
   }
 });
