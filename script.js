@@ -2366,6 +2366,14 @@ function init() {
 
   qsa("#promptChips .chip").forEach(btn => {
     btn.addEventListener("click", () => {
+      // Visual selection state
+      try {
+        qsa('#promptChips .chip').forEach(b => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+        });
+      } catch (e) {}
+
       qs("#aiPrompt").value = btn.dataset.prompt;
       state.prompt = btn.dataset.prompt;
       const preset = btn.dataset.preset;
@@ -2375,6 +2383,8 @@ function init() {
         state.mode = stylePresets[preset].mode;
         state.palette = stylePresets[preset].palette;
       }
+
+      renderPreflight();
     });
   });
   qsa("#revisionChips .chip").forEach(btn => {

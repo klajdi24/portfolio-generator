@@ -20,9 +20,9 @@
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: radial-gradient(circle at 20% 15%, rgba(200,138,58,0.10), transparent 45%),
-              radial-gradient(circle at 85% 20%, rgba(76,98,130,0.12), transparent 46%),
-              var(--ui-bg);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 220px),
+    var(--ui-bg);
   color: var(--ui-text);
   line-height: 1.45;
 }
@@ -90,10 +90,8 @@ a { color: inherit; }
   box-shadow: var(--ui-shadow-soft);
 }
 .flow-card.primary-step {
-  border-color: rgba(200,138,58,0.22);
-  background:
-    radial-gradient(circle at 10% 0%, rgba(200,138,58,0.10), transparent 45%),
-    rgba(15,18,24,0.85);
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(15,18,24,0.88);
 }
 .flow-card.generate-step {
   border-color: rgba(200,138,58,0.30);
@@ -238,9 +236,9 @@ textarea[readonly] { opacity: 0.85; }
   padding: 12px 14px;
   border-radius: 14px;
   border-color: rgba(200,138,58,0.65);
-  box-shadow: 0 18px 60px rgba(200,138,58,0.16);
+  box-shadow: 0 10px 28px rgba(200,138,58,0.14);
 }
-.generate-btn:hover { transform: translateY(-1px); box-shadow: 0 22px 70px rgba(200,138,58,0.20); }
+.generate-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 34px rgba(200,138,58,0.18); }
 .generate-btn.is-loading { pointer-events: none; opacity: 0.7; box-shadow: 0 0 20px rgba(200,138,58,0.35); transform: scale(0.98); }
 .generate-btn.is-loading::after { content: "Generating…"; margin-left: 10px; font-size: 12px; color: #101215; }
 .icon-btn { background: transparent; border: none; font-size: 18px; }
@@ -256,6 +254,10 @@ textarea[readonly] { opacity: 0.85; }
   transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 .chip:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); transform: translateY(-1px); }
+.chip.is-active {
+  border-color: rgba(200,138,58,0.45);
+  background: rgba(200,138,58,0.12);
+}
 .eyebrow { font-size: 12px; letter-spacing: 0.2em; color: #7d8699; text-transform: uppercase; margin: 0 0 8px 0; }
 .muted { color: #9aa3b2; }
 .help { font-size: 12px; color: rgba(197,205,220,0.72); }
@@ -436,9 +438,7 @@ textarea[readonly] { opacity: 0.85; }
 }
 .empty-state { display: flex; justify-content: center; align-items: center; min-height: 260px; padding: 24px 0; }
 .empty-card { padding: 26px; border: 1px solid #1f2330; border-radius: 18px; background: #0f1218; text-align: center; max-width: 640px; position: relative; overflow: hidden; }
-.cinematic-intro::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(200,138,58,0.18), transparent 55%), radial-gradient(circle at 80% 60%, rgba(59,74,94,0.25), transparent 60%), linear-gradient(180deg, rgba(0,0,0,0.35), transparent 60%); opacity: 0.9; }
-.cinematic-intro::after { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.04), rgba(255,255,255,0.04) 1px, transparent 1px, transparent 3px); opacity: 0.12; }
-.cinematic-intro * { position: relative; z-index: 1; }
+/* (removed cinematic intro effects for a calmer, more professional empty state) */
 
 /* Portfolio Render */
 .portfolio { color: var(--text); background: var(--base); padding: 40px 60px 80px; position: relative; overflow: hidden; }
