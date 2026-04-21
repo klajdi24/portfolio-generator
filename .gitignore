@@ -1,0 +1,9 @@
+.env.local
+.env
+.DS_Store
+server.log
+uploads/
+node_modules/
+*.zip
+*.mov
+*.mp4

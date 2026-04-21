@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: portfolio-generator
+    env: node
+    plan: free
+    buildCommand: ""
+    startCommand: "npm start"
+    autoDeploy: true
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: PORT
+        value: 10000
