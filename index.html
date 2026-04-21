@@ -108,9 +108,9 @@
                 <h2>LLM Mode</h2>
                 <label class="toggle">
                   <input type="checkbox" id="llmToggle" checked />
-                  <span>Use OpenAI generation (via local proxy)</span>
+                  <span>Use OpenAI generation</span>
                 </label>
-                <p class="help">Requires OPENAI_API_KEY in .env.local</p>
+                <p class="help">Requires OPENAI_API_KEY (Render env vars when deployed, or .env.local when running locally).</p>
                 <label class="toggle"><input type="checkbox" id="streamToggle" checked /> <span>Stream response</span></label>
                 <div id="llmStatus" class="help status-banner" data-kind="busy" role="status" aria-live="polite">LLM status: checking…</div>
               </section>

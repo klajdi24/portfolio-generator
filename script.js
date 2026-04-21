@@ -913,7 +913,9 @@ async function checkLLMStatus() {
     return;
   }
   try {
-    const res = await fetch('/api/status');
+    // Avoid any cached/intermediate responses (Render/Cloudflare can transiently cache negative responses).
+    const res = await fetch('/api/status', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     setBanner(el, data.ok ? 'LLM status: connected' : 'LLM status: error', data.ok ? 'ok' : 'error');
   } catch (e) {
