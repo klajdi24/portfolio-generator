@@ -25,8 +25,8 @@
           <div class="toolbar-right">
             <button type="button" id="demoBtn" class="toolbar-btn" title="Runs a reliable demo flow">Demo mode</button>
             <button type="button" id="baselineBtn" class="toolbar-btn" title="Generate a baseline (no-LLM) version for comparison">Baseline</button>
-            <button type="button" id="exportBtn" class="toolbar-btn primary" onclick="window.exportHTML && exportHTML()">Export HTML</button>
-            <button type="button" id="exportZipBtn" class="toolbar-btn" onclick="window.exportZIP && exportZIP()">Export ZIP</button>
+            <button type="button" id="exportBtn" class="toolbar-btn primary">Export HTML</button>
+            <button type="button" id="exportZipBtn" class="toolbar-btn">Export ZIP</button>
           </div>
         </div>
 
@@ -34,7 +34,7 @@
           <section class="panel">
             <div class="panel-row">
               <h2>Step 1 — Add your CV</h2>
-              <button type="button" id="useSampleBtn" class="small-btn" onclick="if(window.sampleCV){const c=document.querySelector('#cvText'); if(c){c.value=sampleCV;} if(window.state){state.cvText=sampleCV; state.usedSample=true;}}">Use Sample CV</button>
+              <button type="button" id="useSampleBtn" class="small-btn">Use Sample CV</button>
             </div>
             <label for="cvFile">Upload CV (.txt / .md / .pdf)</label>
             <input id="cvFile" type="file" accept=".txt,.md,.pdf" />
@@ -159,7 +159,7 @@
               </div>
             </div>
             <div class="ai-actions sticky-generate" style="margin-top:14px;">
-              <button type="button" id="generateBtn" class="generate-btn" onclick="window.renderPortfolio && renderPortfolio()">Generate Portfolio</button>
+              <button type="button" id="generateBtn" class="generate-btn">Generate Portfolio</button>
               <div class="footer-actions">
                 <button type="button" id="regenStyleBtn" class="small-btn grow">Regenerate Style</button>
                 <button type="button" id="regenContentBtn" class="small-btn grow">Regenerate Content</button>
@@ -222,8 +222,8 @@
               Build from CV + natural language prompt, then refine by asking the AI for changes.
             </p>
             <div class="empty-actions">
-              <button type="button" id="emptySampleBtn" class="toolbar-btn" onclick="if(window.sampleCV){const c=document.querySelector('#cvText'); if(c){c.value=sampleCV;} if(window.state){state.cvText=sampleCV; state.usedSample=true;}}">Use Sample CV</button>
-              <button type="button" id="emptyGenerateBtn" class="toolbar-btn primary" onclick="window.renderPortfolio && renderPortfolio()">Generate Now</button>
+              <button type="button" id="emptySampleBtn" class="toolbar-btn">Use Sample CV</button>
+              <button type="button" id="emptyGenerateBtn" class="toolbar-btn primary">Generate Now</button>
             </div>
           </div>
         </div>
