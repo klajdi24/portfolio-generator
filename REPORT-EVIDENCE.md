@@ -6,10 +6,9 @@ AI-assisted workflow to generate a usable portfolio website draft from a CV, wit
 ## Screenshots to capture
 
 1) **Step flow**
-- Step 1 CV
-- Step 2 style prompt
-- Step 3 generate
-- Advanced collapsed (optional features are not overwhelming)
+- Stepper visible (CV → Enrich → Style → Generate → Refine)
+- Advanced/Refine collapsed by default (optional features don’t overwhelm)
+- Split layout: AI Studio left + live preview right
 
 2) **Pre-flight checklist**
 - Show it flagging missing projects/media/links

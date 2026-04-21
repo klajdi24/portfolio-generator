@@ -171,11 +171,14 @@ function preflightChecks() {
     title: 'Summary quality',
     detail: summaryLen >= 60 ? 'Good' : (summaryLen ? 'A bit short, aim for 2–3 lines.' : 'Missing summary, generate once to extract it.')
   });
+  const projectsKind = projectCount < 3 ? 'fix' : (projectCount <= 6 ? 'ok' : 'warn');
   checks.push({
     id: 'projects',
-    kind: projectCount >= 3 ? 'ok' : 'fix',
+    kind: projectsKind,
     title: 'Projects extracted',
-    detail: `${projectCount} found (target 3–6).`
+    detail: projectCount <= 6
+      ? `${projectCount} found (target 3–6).`
+      : `${projectCount} found (recommended 3–6). Consider curating to the strongest 6.`
   });
   checks.push({
     id: 'project-desc',
@@ -213,7 +216,10 @@ function renderPreflight() {
 
   const ghUser = String(qs('#ghUser')?.value || '').trim();
   const actionFor = (c) => {
-    if (c.id === 'projects' && c.kind !== 'ok') return ghUser ? { label: 'Import from GitHub', action: 'open-github' } : { label: 'Open Advanced', action: 'open-advanced' };
+    if (c.id === 'projects') {
+      if (c.kind === 'fix') return ghUser ? { label: 'Import from GitHub', action: 'open-github' } : { label: 'Open Enrich', action: 'open-advanced' };
+      if (c.kind === 'warn') return { label: 'Review projects', action: 'open-advanced' };
+    }
     if (c.id === 'media' && c.kind !== 'ok') return { label: 'Add media', action: 'open-media' };
     if (c.id === 'summary' && c.kind !== 'ok') return { label: 'Generate once', action: 'generate' };
     return null;
@@ -613,6 +619,53 @@ function normalizeProjects(projects = []) {
     }
     return parseProjectLine(String(entry || ""));
   });
+}
+
+// Curate projects to a portfolio-friendly list (recommended 3–6).
+// Keeps the UI clean and aligns with the pre-flight target.
+function pickSelectedProjects(projects = [], max = 6) {
+  const items = normalizeProjects(projects || []);
+  const take = (arr, pred, out, usedTitles) => {
+    for (const p of arr) {
+      if (!p) continue;
+      if (out.length >= max) break;
+      if (!pred(p)) continue;
+      const key = String(p.title || '').toLowerCase().trim();
+      if (!key || usedTitles.has(key)) continue;
+      usedTitles.add(key);
+      out.push({ ...p, featured: true });
+    }
+  };
+  const out = [];
+  const usedTitles = new Set();
+
+  // 1) Explicit featured first, keep original order.
+  take(items, (p) => !!p.featured, out, usedTitles);
+  // 2) Then projects with media.
+  take(items, (p) => !p.featured && !!safeMediaSrc(p.mediaUrl), out, usedTitles);
+  // 3) Then projects with links.
+  take(items, (p) => !p.featured && !!safeHref(p.linkUrl), out, usedTitles);
+  // 4) Then best descriptions.
+  take(items, (p) => !p.featured && String(p.desc || '').trim().length >= 60, out, usedTitles);
+  // 5) Fill remaining.
+  take(items, (p) => true, out, usedTitles);
+
+  return out;
+}
+
+function curateCvProjects(cv, max = 6) {
+  if (!cv || typeof cv !== 'object') return { selected: [], overflow: [] };
+  ensureProjectObjects(cv);
+  const all = normalizeProjects(cv.projects || []);
+  if (all.length <= max) return { selected: all, overflow: [] };
+  const selected = pickSelectedProjects(all, max);
+  const selKeys = new Set(selected.map(p => String(p.title || '').toLowerCase().trim()).filter(Boolean));
+  const overflow = all.filter(p => {
+    const k = String(p.title || '').toLowerCase().trim();
+    return k && !selKeys.has(k);
+  });
+  cv.projects = selected;
+  return { selected, overflow };
 }
 
 function topSkills(skills = [], max = 3) {
@@ -1911,6 +1964,12 @@ async function renderPortfolio() {
         parsedCV = mergeFallback(parsedCV, normalizedCV);
         ensureProjectObjects(parsedCV);
 
+        // Curate to 3–6 projects for a portfolio-friendly output (prevents “wall of cards”).
+        try {
+          const { overflow } = curateCvProjects(parsedCV, 6);
+          if (overflow?.length) state.overflowProjects = overflow;
+        } catch (e) {}
+
         // If we have uploaded assets, try to attach them to projects before rendering.
         autoAssignAssetsToProjects();
         renderMediaAssignments();
@@ -1994,6 +2053,18 @@ async function renderPortfolio() {
     }
     state.motion = nextMotion;
 
+    // Sync UI controls to the computed plan (prevents confusing mismatches after LLM output).
+    try {
+      const ms = qs('#motionSelect');
+      if (ms && Array.from(ms.options || []).some(o => o.value === state.motion)) ms.value = state.motion;
+    } catch (e) {}
+    try {
+      const ls = qs('#layoutSelect');
+      const lay = String(planned?.layout || state.layout || ls?.value || 'auto');
+      if (ls && Array.from(ls.options || []).some(o => o.value === lay)) ls.value = lay;
+      state.layout = lay;
+    } catch (e) {}
+
     let html = "";
     if (state.mode === "cinematic-dark") {
       html = renderCinematicPortfolio(planned, state.palette);
@@ -2003,7 +2074,7 @@ async function renderPortfolio() {
     } else {
       html = renderDefault(planned, state.palette);
       qs("#themeInfo").textContent = "Default";
-      qs("#layoutInfo").textContent = "Auto";
+      qs("#layoutInfo").textContent = String(planned?.layout || state.layout || 'auto');
       qs("#motionInfo").textContent = state.motion || "auto";
     }
 
@@ -2101,6 +2172,22 @@ function init() {
   setBanner('#mediaStatus', `Media: ${(state.assets || []).length ? `${state.assets.length} file(s) uploaded` : '—'}`, 'idle');
   setBanner('#preflightStatus', 'Pre-flight: —', 'idle');
   renderPreflight();
+
+  // Stepper navigation (keeps the multi-step flow feeling "guided" not overwhelming).
+  try {
+    qsa('.stepper-btn[data-scroll]').forEach((btn) => {
+      if (!btn || btn.dataset?.stepperBound === '1') return;
+      btn.dataset.stepperBound = '1';
+      btn.addEventListener('click', () => {
+        const sel = btn.dataset.scroll;
+        const target = sel ? qs(sel) : null;
+        if (!target) return;
+        // Auto-open details panels if the step lives inside them.
+        if (target instanceof HTMLDetailsElement) target.open = true;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  } catch (e) {}
 
   // Exports should only be available after a portfolio exists.
   try {
@@ -2700,12 +2787,20 @@ async function importSelectedGithubRepos(username) {
   }
   cv.projects = Array.from(byTitle.values());
 
+  // Curate to a portfolio-friendly number of projects.
+  try {
+    const { overflow } = curateCvProjects(cv, 6);
+    if (overflow?.length) state.overflowProjects = overflow;
+  } catch (e) {}
+
   state.parsedCV = cv;
-  state.lastUploadWasPdf = true;
+  state.lastUploadWasPdf = false;
   const cvBox = qs('#cvText');
   if (cvBox && !state.manualEdit) cvBox.value = JSON.stringify(state.parsedCV, null, 2);
   renderMediaAssignments();
-  setBanner('#ghStatus', `GitHub: imported ${newProjects.length} repo(s) as projects`, 'ok');
+  const overflowCount = Array.isArray(state.overflowProjects) ? state.overflowProjects.length : 0;
+  setBanner('#ghStatus', `GitHub: imported ${newProjects.length} repo(s) as projects${overflowCount ? ` (curated to 6, ${overflowCount} hidden)` : ''}`, 'ok');
+  renderPreflight();
 
   // Collapse the repo list into a compact summary so it doesn't dominate the flow.
   try {

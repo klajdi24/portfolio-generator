@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { Buffer } = require('buffer');
 const { spawn, spawnSync } = require('child_process');
+const { Readable } = require('stream');
 
 function loadEnv() {
   const candidates = [
@@ -523,7 +524,7 @@ motion, palette, sectionOrder, layout, contentPlan, visualPlan.
 You are NOT generating or rewriting the CV content. The application will place CV fields deterministically.
 
 Constraints:
-- motion must be one of: subtle, cinematic, extreme.
+- motion must be one of: subtle, dynamic, playful, cinematic, extreme.
 - layout can be: auto, recruiter, showcase, case-study.
 - sectionOrder is an array like ["selected","process","experience","skills","education"].
 - palette must include keys: base, surface, surfaceAlt, steel, amber, text, textMuted, border, glow.
@@ -567,7 +568,27 @@ Revision handling:
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive'
           });
-          response.body.pipe(res);
+          const body = response.body;
+          if (!body) return;
+          // Node fetch returns a Web ReadableStream; convert to Node stream when needed.
+          if (typeof body.pipe === 'function') {
+            body.pipe(res);
+            return;
+          }
+          if (Readable?.fromWeb) {
+            Readable.fromWeb(body).pipe(res);
+            return;
+          }
+          // Fallback: manual pump.
+          if (body.getReader) {
+            const reader = body.getReader();
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              if (value) res.write(Buffer.from(value));
+            }
+          }
+          res.end();
           return;
         }
 

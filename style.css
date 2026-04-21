@@ -76,12 +76,103 @@ textarea[readonly] { opacity: 0.85; }
 .eyebrow { font-size: 12px; letter-spacing: 0.2em; color: #7d8699; text-transform: uppercase; margin: 0 0 8px 0; }
 .muted { color: #9aa3b2; }
 .help { font-size: 12px; color: #7d8699; }
-.stage { flex: 1; background: #0c0d10; display: flex; flex-direction: column; }
+.stage { flex: 1; background: #0c0d10; display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
+
+/* App layout: keep the AI Studio visible while preview stays alongside it. */
+.stage-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 520px) 1fr;
+  gap: 18px;
+  padding: 18px;
+  align-items: start;
+  height: 100%;
+}
+.studio-col {
+  min-width: 0;
+  overflow: auto;
+  max-height: calc(100vh - 36px);
+  padding-right: 6px;
+}
+.preview-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(100vh - 36px);
+}
+
+@media (max-width: 1100px) {
+  .stage { overflow: auto; }
+  .stage-grid { grid-template-columns: 1fr; height: auto; }
+  .studio-col, .preview-col { max-height: none; overflow: visible; padding-right: 0; }
+}
+
+.panel-like {
+  border: 1px solid #1f2330;
+  border-radius: 16px;
+  background: #0f1218;
+  padding: 16px;
+}
+
 .toolbar-btn.primary { background: #c88a3a; color: #0e0f12; font-weight: 600; }
 .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #6adf6a; display: inline-block; margin-right: 6px; }
-.ai-revision { margin: 20px; }
-.ai-revision-header { display: flex; justify-content: space-between; gap: 20px; }
-.ai-studio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; align-items: start; }
+
+.ai-revision { margin: 0; }
+.ai-revision-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 14px 14px 10px;
+  margin: -16px -16px 16px;
+  background: rgba(12, 13, 16, 0.92);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.toolbar-right { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+
+.stepper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.stepper-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.86);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.stepper-btn:hover { border-color: rgba(200,138,58,0.35); }
+.stepper-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(200,138,58,0.18);
+  border: 1px solid rgba(200,138,58,0.25);
+  color: rgba(255,255,255,0.9);
+  font-weight: 800;
+  font-size: 11px;
+}
+
+/* Keep steps readable (sequential), not scattered across a wide grid. */
+.ai-studio-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; align-items: stretch; }
+
+.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .controls-grid { grid-template-columns: 1fr; } }
+
+.footer-actions { display: flex; gap: 10px; }
+.footer-actions .grow { flex: 1; }
 
 /* Details panels (Advanced / Refine) */
 .panel-details { padding: 0; }
@@ -124,8 +215,22 @@ textarea[readonly] { opacity: 0.85; }
 .ai-log { margin-top: 10px; font-size: 13px; color: #a2a9b7; }
 .insights { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; padding: 0 20px 20px; }
 .insight { background: #0f1218; border: 1px solid #1f2330; padding: 12px; border-radius: 10px; font-size: 13px; }
-.preview-shell { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
-.preview { min-height: 70vh; border-radius: 18px; overflow: hidden; border: 1px solid #1f2330; }
+.preview-shell {
+  flex: 1;
+  padding: 14px;
+  overflow: auto;
+  position: relative;
+  border: 1px solid #1f2330;
+  border-radius: 18px;
+  background: #0f1218;
+}
+.preview {
+  min-height: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: none;
+  background: #0f1218;
+}
 
 /* Status banners (make uploads/parsing obvious) */
 .status-banner {

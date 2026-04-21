@@ -12,15 +12,25 @@
     <!-- MAIN AREA -->
     <main class="stage">
 
+      <div class="stage-grid">
+
       <!-- AI STUDIO -->
-      <section class="ai-revision panel-like">
+      <section class="ai-revision panel-like studio-col">
         <div class="ai-revision-header">
           <div>
             <p class="eyebrow">AI STUDIO</p>
             <h2>Build your portfolio</h2>
             <p class="muted small">
-              <strong>Quick start:</strong> 1) Add your CV → 2) Pick a style → 3) Generate → 4) Export (host the ZIP on GitHub Pages).
+              <strong>Quick start:</strong> 1) Add your CV → 2) Enrich (media / GitHub) → 3) Pick a style → 4) Generate → 5) Refine → 6) Export.
             </p>
+
+            <nav class="stepper" aria-label="Portfolio build steps">
+              <button type="button" class="stepper-btn" data-scroll="#stepCv"><span class="stepper-num">1</span>CV</button>
+              <button type="button" class="stepper-btn" data-scroll="#advancedPanel"><span class="stepper-num">2</span>Enrich</button>
+              <button type="button" class="stepper-btn" data-scroll="#stepStyle"><span class="stepper-num">3</span>Style</button>
+              <button type="button" class="stepper-btn" data-scroll="#stepGenerate"><span class="stepper-num">4</span>Generate</button>
+              <button type="button" class="stepper-btn" data-scroll="#refinePanel"><span class="stepper-num">5</span>Refine</button>
+            </nav>
           </div>
           <div class="toolbar-right">
             <button type="button" id="demoBtn" class="toolbar-btn" title="Runs a reliable demo flow">Demo mode</button>
@@ -31,7 +41,7 @@
         </div>
 
         <div class="ai-studio-grid">
-          <section class="panel">
+          <section class="panel" id="stepCv">
             <div class="panel-row">
               <h2>Step 1 — Add your CV</h2>
               <button type="button" id="useSampleBtn" class="small-btn">Use Sample CV</button>
@@ -54,9 +64,10 @@
           <details class="panel panel-details" id="advancedPanel">
             <summary>
               <div>
-                <h2 style="margin:0;">Advanced (optional)</h2>
-                <p class="help" style="margin:6px 0 0;">GitHub import, media, quality checks, and generation settings.</p>
+                <h2 style="margin:0;">Step 2 — Enrich (recommended)</h2>
+                <p class="help" style="margin:6px 0 0;">Media + GitHub import makes your projects look real (and improves the output).</p>
               </div>
+              <div class="summary-right"><span class="summary-hint" aria-hidden="true"></span></div>
             </summary>
 
             <div class="details-body">
@@ -78,7 +89,7 @@
               </section>
 
               <section class="panel subpanel" id="githubPanel">
-                <h2>Import from GitHub (optional)</h2>
+                <h2>Import from GitHub</h2>
                 <p class="help">Pull public repos and convert them into portfolio-ready project entries. (No token needed for public repos.)</p>
                 <label for="ghUser">GitHub username</label>
                 <input id="ghUser" type="text" placeholder="e.g. klajdi-dev" />
@@ -117,8 +128,8 @@
             </div>
           </details>
 
-          <section class="panel">
-            <h2>Step 2 — Choose a style</h2>
+          <section class="panel" id="stepStyle">
+            <h2>Step 3 — Choose a style</h2>
             <label for="aiPrompt">Describe the portfolio you want</label>
             <textarea
               id="aiPrompt"
@@ -134,8 +145,8 @@
             </div>
           </section>
 
-          <section class="panel">
-            <h2>Step 3 — Generate</h2>
+          <section class="panel" id="stepGenerate">
+            <h2>Step 4 — Generate</h2>
             <div class="help status-banner" id="preflightStatus" data-kind="idle" role="status" aria-live="polite">Pre-flight: —</div>
             <div id="preflightList" class="preflight"></div>
             <div class="controls-grid">
@@ -154,6 +165,8 @@
                   <option value="auto">Auto</option>
                   <option value="subtle">Subtle</option>
                   <option value="dynamic">Dynamic</option>
+                  <option value="cinematic">Cinematic</option>
+                  <option value="extreme">Extreme</option>
                   <option value="playful">Playful</option>
                 </select>
               </div>
@@ -170,9 +183,10 @@
           <details class="panel panel-details" id="refinePanel">
             <summary>
               <div>
-                <h2 style="margin:0;">Refine (after generate)</h2>
-                <p class="help" style="margin:6px 0 0;">Ask for revisions once you have a first draft.</p>
+                <h2 style="margin:0;">Step 5 — Refine & polish</h2>
+                <p class="help" style="margin:6px 0 0;">Once you have a first draft, ask the AI to make targeted improvements.</p>
               </div>
+              <div class="summary-right"><span class="summary-hint" aria-hidden="true"></span></div>
             </summary>
             <div class="details-body">
               <section class="panel subpanel">
@@ -201,15 +215,16 @@
 
 
       <!-- INSIGHTS -->
-      <section class="insights">
-        <div class="insight"><span>Theme</span><strong id="themeInfo">—</strong></div>
-        <div class="insight"><span>Layout</span><strong id="layoutInfo">—</strong></div>
-        <div class="insight"><span>Motion</span><strong id="motionInfo">—</strong></div>
-        <div class="insight"><span>Extraction</span><strong id="extractInfo">No CV parsed yet</strong></div>
-      </section>
+      <div class="preview-col">
+        <section class="insights">
+          <div class="insight"><span>Theme</span><strong id="themeInfo">—</strong></div>
+          <div class="insight"><span>Layout</span><strong id="layoutInfo">—</strong></div>
+          <div class="insight"><span>Motion</span><strong id="motionInfo">—</strong></div>
+          <div class="insight"><span>Extraction</span><strong id="extractInfo">No CV parsed yet</strong></div>
+        </section>
 
-      <!-- PREVIEW -->
-      <section class="preview-shell">
+        <!-- PREVIEW -->
+        <section class="preview-shell">
         <div class="loading-state hidden" id="loadingState">
           <p>Generating portfolio…</p>
           <div class="loading-bar"><span></span></div>
@@ -247,6 +262,10 @@
           </div>
         </div>
       </section>
+
+      </div>
+
+      </div>
     </main>
   </div>
 
