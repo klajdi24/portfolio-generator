@@ -157,21 +157,21 @@ function preflightChecks() {
     id: 'cv',
     kind: hasAnyCvText ? 'ok' : 'fix',
     title: 'CV provided',
-    detail: hasAnyCvText ? 'Good' : 'Paste/upload your CV (or use the sample).'
+    detail: hasAnyCvText ? 'Ready' : 'Add your CV to get started (upload or use the sample).'
   });
   checks.push({
     id: 'prompt',
     kind: hasPrompt ? 'ok' : 'warn',
     title: 'Style prompt',
-    detail: hasPrompt ? 'Good' : 'Optional, but helps the style feel intentional.'
+    detail: hasPrompt ? 'Ready' : 'Recommended: describe the vibe, audience, and layout.'
   });
   checks.push({
     id: 'summary',
-    kind: summaryLen >= 60 ? 'ok' : (summaryLen ? 'warn' : 'fix'),
+    kind: summaryLen >= 60 ? 'ok' : 'warn',
     title: 'Summary quality',
-    detail: summaryLen >= 60 ? 'Good' : (summaryLen ? 'A bit short, aim for 2–3 lines.' : 'Missing summary, generate once to extract it.')
+    detail: summaryLen >= 60 ? 'Ready' : (summaryLen ? 'A bit short, aim for 2–3 lines.' : 'Missing summary, generate a draft to extract it.')
   });
-  const projectsKind = projectCount < 3 ? 'fix' : (projectCount <= 6 ? 'ok' : 'warn');
+  const projectsKind = (projectCount >= 3 && projectCount <= 6) ? 'ok' : 'warn';
   checks.push({
     id: 'projects',
     kind: projectsKind,
@@ -182,7 +182,7 @@ function preflightChecks() {
   });
   checks.push({
     id: 'project-desc',
-    kind: (projectCount ? (withDesc >= Math.min(3, projectCount) ? 'ok' : 'warn') : 'fix'),
+    kind: (projectCount ? (withDesc >= Math.min(3, projectCount) ? 'ok' : 'warn') : 'warn'),
     title: 'Project descriptions',
     detail: `${withDesc}/${projectCount || 0} have strong descriptions.`
   });
@@ -206,27 +206,54 @@ function preflightChecks() {
   return { overall, checks };
 }
 
+function renderAccordionMeta() {
+  const enrich = qs('#enrichMeta');
+  if (enrich) {
+    const mediaCount = (state.assets || []).length;
+    const ghUser = String(qs('#ghUser')?.value || '').trim();
+    const repoCount = Array.isArray(state.ghRepos) ? state.ghRepos.length : 0;
+    const mediaPart = mediaCount ? `${mediaCount} media` : 'No media';
+    const ghPart = ghUser ? (repoCount ? `${repoCount} repos loaded` : 'GitHub set') : 'GitHub not connected';
+    enrich.textContent = `${mediaPart} · ${ghPart}`;
+  }
+
+  const tools = qs('#toolsMeta');
+  if (tools) {
+    const { overall, checks } = preflightChecks();
+    const recs = checks.filter(c => c.kind === 'warn').length;
+    const missing = checks.filter(c => c.kind === 'fix').length;
+    const exDisabled = !!qs('#exportBtn')?.disabled;
+    const readiness = overall === 'ok' ? 'Ready' : (overall === 'warn' ? 'Recommendations' : 'Missing');
+    const counts = missing ? `${missing} missing` : (recs ? `${recs} recommendations` : 'No recommendations');
+    const exportPart = exDisabled ? 'Export after generation' : 'Export available';
+    tools.textContent = `${readiness} · ${counts} · ${exportPart}`;
+  }
+}
+
 function renderPreflight() {
   const status = qs('#preflightStatus');
   const list = qs('#preflightList');
   if (!status || !list) return;
   const { overall, checks } = preflightChecks();
-  const label = overall === 'ok' ? 'Ready to export' : overall === 'warn' ? 'Usable, but could improve' : 'Needs fixes before export';
-  setBanner(status, `Pre-flight: ${label}`, overall === 'ok' ? 'ok' : (overall === 'warn' ? 'busy' : 'error'));
+  const label = overall === 'ok'
+    ? 'Ready'
+    : (overall === 'warn' ? 'Good start (recommended improvements)' : 'Missing required info');
+  setBanner(status, `Portfolio readiness: ${label}`, overall === 'ok' ? 'ok' : (overall === 'warn' ? 'busy' : 'error'));
 
   const ghUser = String(qs('#ghUser')?.value || '').trim();
   const actionFor = (c) => {
+    if (c.id === 'cv' && c.kind !== 'ok') return { label: 'Add CV', action: 'open-cv' };
+    if (c.id === 'prompt' && c.kind !== 'ok') return { label: 'Improve prompt', action: 'open-prompt' };
     if (c.id === 'projects') {
-      if (c.kind === 'fix') return ghUser ? { label: 'Import from GitHub', action: 'open-github' } : { label: 'Open Enrich', action: 'open-advanced' };
       if (c.kind === 'warn') return { label: 'Review projects', action: 'open-advanced' };
     }
     if (c.id === 'media' && c.kind !== 'ok') return { label: 'Add media', action: 'open-media' };
-    if (c.id === 'summary' && c.kind !== 'ok') return { label: 'Generate once', action: 'generate' };
+    // Summary is extracted during the normal Generate step, so avoid showing a duplicate "generate" CTA here.
     return null;
   };
 
   list.innerHTML = checks.map(c => {
-    const pill = c.kind === 'ok' ? 'OK' : (c.kind === 'warn' ? 'IMPROVE' : 'FIX');
+    const pill = c.kind === 'ok' ? 'Ready' : (c.kind === 'warn' ? 'Recommended' : 'Missing');
     const act = actionFor(c);
     const btn = act ? `<button type="button" class="small-btn" data-preflight-action="${escapeHtml(act.action)}">${escapeHtml(act.label)}</button>` : `<div class="pill">${pill}</div>`;
     return `
@@ -238,6 +265,8 @@ function renderPreflight() {
         ${btn}
       </div>`;
   }).join('');
+
+  renderAccordionMeta();
 }
 
 function looksLikeDemoCVJson(text = "") {
@@ -2170,24 +2199,8 @@ function init() {
   // Make initial statuses visible and consistent.
   setBanner('#uploadStatus', 'Upload status: —', 'idle');
   setBanner('#mediaStatus', `Media: ${(state.assets || []).length ? `${state.assets.length} file(s) uploaded` : '—'}`, 'idle');
-  setBanner('#preflightStatus', 'Pre-flight: —', 'idle');
+  setBanner('#preflightStatus', 'Portfolio readiness: —', 'idle');
   renderPreflight();
-
-  // Stepper navigation (keeps the multi-step flow feeling "guided" not overwhelming).
-  try {
-    qsa('.stepper-btn[data-scroll]').forEach((btn) => {
-      if (!btn || btn.dataset?.stepperBound === '1') return;
-      btn.dataset.stepperBound = '1';
-      btn.addEventListener('click', () => {
-        const sel = btn.dataset.scroll;
-        const target = sel ? qs(sel) : null;
-        if (!target) return;
-        // Auto-open details panels if the step lives inside them.
-        if (target instanceof HTMLDetailsElement) target.open = true;
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
-  } catch (e) {}
 
   // Exports should only be available after a portfolio exists.
   try {
@@ -2227,86 +2240,114 @@ function init() {
     });
   }
   const cvFile = qs("#cvFile");
+  const cvDropZone = qs('#cvDropZone');
+
+  const processCvFile = async (file) => {
+    if (!file) return;
+
+    // Keep the original file so the preview "Download CV" button can download it.
+    // (If the user pasted text instead, we'll fall back to downloading text/JSON.)
+    state.cvOriginalFile = file;
+    const name = file.name?.toLowerCase() || '';
+
+    // Always reset structured state on new upload.
+    state.parsedCV = null;
+    state.lastUploadWasPdf = false;
+    setManualEdit(false);
+    if (manualToggle) manualToggle.checked = false;
+
+    // Guard: if the textarea contains raw PDF bytes, clear it.
+    const cvBox = qs('#cvText');
+    if (cvBox && /^%PDF-/m.test(cvBox.value || '')) {
+      cvBox.value = '';
+      state.cvText = '';
+    }
+
+    if (file.type === 'application/pdf' || name.endsWith('.pdf')) {
+      try {
+        setBanner('#uploadStatus', 'Upload status: extracting PDF locally…', 'busy');
+        state.pdfParsing = true;
+        const genBtn = qs('#generateBtn');
+        if (genBtn) genBtn.disabled = true;
+        const buf = await file.arrayBuffer();
+        const raw = await extractPdfText(buf);
+        const cleaned = cleanPdfCvText(raw);
+        setBanner('#uploadStatus', 'Upload status: parsing with AI…', 'busy');
+        const improved = await llmImproveFromCV(cleaned, (qs('#aiPrompt')?.value || state.prompt || ''), false);
+        state.lastUploadWasPdf = true;
+        state.sampleActive = false;
+        state.parsedCV = ensureProjectObjects(improved);
+        const pretty = state.parsedCV ? JSON.stringify(state.parsedCV, null, 2) : cleaned;
+        qs('#cvText').value = pretty;
+        state.cvText = pretty;
+        state.rawCv = pretty;
+        setCvSourceNote('PDF parsed (structured)');
+        setBanner('#uploadStatus', `Upload status: PDF extracted + parsed (${String(pretty || '').length} chars)`, 'ok');
+        renderPreflight();
+        state.pdfParsing = false;
+        if (genBtn) genBtn.disabled = false;
+        return;
+      } catch (err) {
+        setBanner('#uploadStatus', 'Upload status: PDF parse failed', 'error');
+        alert('Could not parse PDF. Please try again or paste the text manually.');
+        state.pdfParsing = false;
+        const genBtn = qs('#generateBtn');
+        if (genBtn) genBtn.disabled = false;
+        return;
+      }
+    }
+    if (name.endsWith('.docx') || name.endsWith('.doc')) {
+      setBanner('#uploadStatus', 'Upload status: DOCX not supported (please copy/paste text)', 'error');
+      alert('DOCX/DOC detected. Please copy/paste the text into the box below.');
+      return;
+    }
+    try {
+      const text = await file.text();
+      if (/^%PDF-/m.test(text || '')) {
+        setBanner('#uploadStatus', 'Upload status: invalid text (PDF binary detected)', 'error');
+        alert('This looks like a PDF binary. Please upload it as a PDF so it can be parsed properly.');
+        return;
+      }
+      qs("#cvText").value = text;
+      state.cvText = text;
+      state.lastUploadWasPdf = false;
+      state.parsedCV = null;
+      setCvSourceNote('text (needs parse on generate)');
+      setBanner('#uploadStatus', `Upload status: loaded ${file.name || 'file'} (${String(text || '').length} chars)`, 'ok');
+      renderPreflight();
+    } catch (err) {
+      setBanner('#uploadStatus', 'Upload status: could not read file', 'error');
+      alert('Could not read file. Please paste the text instead.');
+    }
+  };
+
   if (cvFile) {
     cvFile.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
-      if (!file) return;
+      await processCvFile(file);
+    });
+  }
 
-      // Keep the original file so the preview "Download CV" button can download it.
-      // (If the user pasted text instead, we'll fall back to downloading text/JSON.)
-      state.cvOriginalFile = file;
-      const name = file.name?.toLowerCase() || '';
-      const isPdf = file.type === 'application/pdf' || name.endsWith('.pdf');
+  if (cvDropZone) {
+    const pickCv = () => { try { cvFile?.click?.(); } catch (e) {} };
+    cvDropZone.addEventListener('click', pickCv);
+    cvDropZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        pickCv();
+      }
+    });
 
-      // Always reset structured state on new upload.
-      state.parsedCV = null;
-      state.lastUploadWasPdf = false;
-      setManualEdit(false);
-      if (manualToggle) manualToggle.checked = false;
-
-      // Guard: if the textarea contains raw PDF bytes, clear it.
-      const cvBox = qs('#cvText');
-      if (cvBox && /^%PDF-/m.test(cvBox.value || '')) {
-        cvBox.value = '';
-        state.cvText = '';
-      }
-
-      if (file.type === 'application/pdf' || name.endsWith('.pdf')) {
-        try {
-          setBanner('#uploadStatus', 'Upload status: extracting PDF locally…', 'busy');
-          state.pdfParsing = true;
-          const genBtn = qs('#generateBtn');
-          if (genBtn) genBtn.disabled = true;
-          const buf = await file.arrayBuffer();
-          const raw = await extractPdfText(buf);
-          const cleaned = cleanPdfCvText(raw);
-          setBanner('#uploadStatus', 'Upload status: parsing with AI…', 'busy');
-          const improved = await llmImproveFromCV(cleaned, (qs('#aiPrompt')?.value || state.prompt || ''), false);
-          state.lastUploadWasPdf = true;
-          state.sampleActive = false;
-          state.parsedCV = ensureProjectObjects(improved);
-          const pretty = state.parsedCV ? JSON.stringify(state.parsedCV, null, 2) : cleaned;
-          qs('#cvText').value = pretty;
-          state.cvText = pretty;
-          state.rawCv = pretty;
-          setCvSourceNote('PDF parsed (structured)');
-          setBanner('#uploadStatus', `Upload status: PDF extracted + parsed (${String(pretty || '').length} chars)`, 'ok');
-          renderPreflight();
-          state.pdfParsing = false;
-          if (genBtn) genBtn.disabled = false;
-          return;
-        } catch (err) {
-          setBanner('#uploadStatus', 'Upload status: PDF parse failed', 'error');
-          alert('Could not parse PDF. Please try again or paste the text manually.');
-          state.pdfParsing = false;
-          const genBtn = qs('#generateBtn');
-          if (genBtn) genBtn.disabled = false;
-          return;
-        }
-      }
-      if (name.endsWith('.docx') || name.endsWith('.doc')) {
-        setBanner('#uploadStatus', 'Upload status: DOCX not supported (please copy/paste text)', 'error');
-        alert('DOCX/DOC detected. Please copy/paste the text into the box below.');
-        return;
-      }
-      try {
-        const text = await file.text();
-        if (/^%PDF-/m.test(text || '')) {
-          setBanner('#uploadStatus', 'Upload status: invalid text (PDF binary detected)', 'error');
-          alert('This looks like a PDF binary. Please upload it as a PDF so it can be parsed properly.');
-          return;
-        }
-        qs("#cvText").value = text;
-        state.cvText = text;
-        state.lastUploadWasPdf = false;
-        state.parsedCV = null;
-        setCvSourceNote('text (needs parse on generate)');
-        setBanner('#uploadStatus', `Upload status: loaded ${file.name || 'file'} (${String(text || '').length} chars)`, 'ok');
-        renderPreflight();
-      } catch (err) {
-        setBanner('#uploadStatus', 'Upload status: could not read file', 'error');
-        alert('Could not read file. Please paste the text instead.');
-      }
+    cvDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      cvDropZone.classList.add('dragover');
+    });
+    cvDropZone.addEventListener('dragleave', () => cvDropZone.classList.remove('dragover'));
+    cvDropZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      cvDropZone.classList.remove('dragover');
+      const file = e.dataTransfer?.files?.[0];
+      await processCvFile(file);
     });
   }
   qs("#aiPrompt").addEventListener("input", (e) => { state.prompt = e.target.value; renderPreflight(); });
@@ -2343,7 +2384,8 @@ function init() {
   });
 
   qs("#generateBtn").addEventListener("click", async () => { await renderPortfolio(); });
-  qs("#emptyGenerateBtn").addEventListener("click", async () => { await renderPortfolio(); });
+  const emptyGen = qs("#emptyGenerateBtn");
+  if (emptyGen) emptyGen.addEventListener("click", async () => { await renderPortfolio(); });
   qs("#applyChangeBtn").addEventListener("click", async () => {
     const change = qs("#changeRequest").value.trim();
     if (change) {
@@ -2426,20 +2468,25 @@ function init() {
   const ghIncludeForks = qs('#ghIncludeForks');
   const ghFetchBtn = qs('#ghFetchBtn');
   const ghImportBtn = qs('#ghImportBtn');
+
+  ghUser?.addEventListener?.('input', () => renderPreflight());
   if (ghFetchBtn) {
     ghFetchBtn.addEventListener('click', async () => {
       try {
         const user = (ghUser?.value || '').trim();
         if (!user) {
           setBanner('#ghStatus', 'GitHub: enter a username', 'error');
+          renderPreflight();
           return;
         }
         setBanner('#ghStatus', 'GitHub: fetching repos…', 'busy');
         state.ghRepos = await fetchGithubRepos(user, !!ghIncludeForks?.checked);
         renderGithubRepoList();
         setBanner('#ghStatus', `GitHub: loaded ${state.ghRepos.length} repo(s) (showing top 16)`, 'ok');
+        renderPreflight();
       } catch (e) {
         setBanner('#ghStatus', `GitHub: ${String(e.message || e)}`, 'error');
+        renderPreflight();
       }
     });
   }
@@ -2447,12 +2494,24 @@ function init() {
     ghImportBtn.addEventListener('click', async () => {
       const user = (ghUser?.value || '').trim();
       await importSelectedGithubRepos(user);
+      renderPreflight();
     });
   }
 
   // Quality checks
   qs('#qcRunBtn')?.addEventListener('click', () => runQualityChecks());
   qs('#qcTestBtn')?.addEventListener('click', () => runCvTestSet());
+
+  // Accessibility: keep aria-expanded in sync for native <details>/<summary> accordions.
+  try {
+    qsa('details').forEach(d => {
+      const s = d.querySelector('summary');
+      if (!s) return;
+      const sync = () => s.setAttribute('aria-expanded', d.open ? 'true' : 'false');
+      sync();
+      d.addEventListener('toggle', sync);
+    });
+  } catch (e) {}
 
   hoverVideoControl();
   observeVideos();
@@ -2928,11 +2987,30 @@ document.addEventListener('click', (e) => {
   const pre = t.closest?.('[data-preflight-action]');
   const pa = pre?.dataset?.preflightAction;
   if (pa) {
+    if (pa === 'open-cv') {
+      qs('#stepCv')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      try { qs('#cvDropZone')?.focus?.(); } catch (e) {}
+      e.preventDefault();
+      return;
+    }
+    if (pa === 'open-prompt') {
+      qs('#stepStyle')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      try { qs('#aiPrompt')?.focus?.(); } catch (e) {}
+      e.preventDefault();
+      return;
+    }
+    if (pa === 'open-generate') {
+      qs('#stepGenerate')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      try { qs('#generateBtn')?.focus?.(); } catch (e) {}
+      e.preventDefault();
+      return;
+    }
     if (pa === 'generate') {
       renderPortfolio();
       e.preventDefault();
       return;
     }
+
     const advanced = qs('#advancedPanel');
     if (advanced && advanced instanceof HTMLDetailsElement) advanced.open = true;
     if (pa === 'open-advanced') {
