@@ -912,15 +912,24 @@ async function checkLLMStatus() {
     setBanner(el, 'LLM status: off', 'idle');
     return;
   }
-  try {
-    // Avoid any cached/intermediate responses (Render/Cloudflare can transiently cache negative responses).
-    const res = await fetch('/api/status', { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    setBanner(el, data.ok ? 'LLM status: connected' : 'LLM status: error', data.ok ? 'ok' : 'error');
-  } catch (e) {
-    setBanner(el, 'LLM status: unreachable', 'error');
+  setBanner(el, 'LLM status: checking…', 'busy');
+
+  // Render free tier can cold-start, and edge caches can briefly serve a stale negative response.
+  // We (1) bust cache with a query param, (2) disable cache, (3) retry a few times.
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const res = await fetch(`/api/status?ts=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setBanner(el, data.ok ? 'LLM status: connected' : 'LLM status: error', data.ok ? 'ok' : 'error');
+      return;
+    } catch (e) {
+      // keep retrying
+      await new Promise(r => setTimeout(r, 350 * (attempt + 1)));
+    }
   }
+
+  setBanner(el, 'LLM status: unreachable', 'error');
 }
 
 async function showBuildId() {

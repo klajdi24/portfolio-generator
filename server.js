@@ -194,11 +194,16 @@ try {
 } catch (e) {}
 
 const server = http.createServer(async (req, res) => {
-  if (req.method === 'GET' && req.url === '/api/version') {
+  const parsedUrl = (() => {
+    try { return new URL(req.url, 'http://127.0.0.1'); } catch (e) { return null; }
+  })();
+  const pathname = parsedUrl?.pathname || req.url;
+
+  if (req.method === 'GET' && pathname === '/api/version') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ ok: true, build: BUILD_ID }));
   }
-  if (req.method === 'GET' && req.url === '/api/status') {
+  if (req.method === 'GET' && pathname === '/api/status') {
     const hasKey = !!process.env.OPENAI_API_KEY;
     const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
