@@ -2695,6 +2695,16 @@ async function importSelectedGithubRepos(username) {
   if (cvBox && !state.manualEdit) cvBox.value = JSON.stringify(state.parsedCV, null, 2);
   renderMediaAssignments();
   setBanner('#ghStatus', `GitHub: imported ${newProjects.length} repo(s) as projects`, 'ok');
+
+  // Collapse the repo list into a compact summary so it doesn't dominate the flow.
+  try {
+    const who = username ? `from @${username}` : '';
+    wrap.innerHTML = `
+      <div class="help" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid #1f2330; border-radius:12px; background: rgba(255,255,255,0.02);">
+        <div><strong>Imported ${newProjects.length}</strong> repo(s) ${escapeHtml(who)}.</div>
+        <button type="button" class="small-btn" id="ghChangeBtn">Change selection</button>
+      </div>`;
+  } catch (e) {}
 }
 
 function runQualityChecks() {
@@ -2801,6 +2811,12 @@ window.exportHTML = exportHTML;
 document.addEventListener('click', (e) => {
   const t = e.target;
   if (!t) return;
+
+  if (t.id === 'ghChangeBtn') {
+    renderGithubRepoList();
+    e.preventDefault();
+    return;
+  }
 
   // Pre-flight actions
   const pre = t.closest?.('[data-preflight-action]');
