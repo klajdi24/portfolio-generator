@@ -622,7 +622,7 @@ Rules:
         const system = `You are a portfolio style planner.
 
 Return ONLY valid JSON with fields:
-motion, palette, sectionOrder, layout, contentPlan, visualPlan.
+motion, palette, sectionOrder, layout, contentPlan, visualPlan, fontPair.
 
 You are NOT generating or rewriting the CV content. The application will place CV fields deterministically.
 
@@ -633,6 +633,10 @@ Constraints:
 - palette must include keys: base, surface, surfaceAlt, steel, amber, text, textMuted, border, glow.
 - contentPlan: { sectionOrder, heroLabel, heroSubtitle, selectedIntro, processIntro, experienceIntro, skillsIntro, educationIntro }
 - visualPlan: { family, mood, layout, heroTreatment, cardTreatment, spacing, background:{grain, grid} }
+
+Font rules:
+- You MUST set fontPair to one of the provided fontPair keys (you will be given a list in the user prompt).
+- Choose a fontPair appropriate to the prompt and the CV title/role.
 
 Quality rules:
 - Be specific to the style prompt.

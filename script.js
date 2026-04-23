@@ -52,7 +52,103 @@ window.state = {
   lastProjects: [],
   ghRepos: [],
   ghPinned: [],
+
+  // Typography
+  fontPairKey: null,
 };
+
+// Fancy font pairs (Google Fonts). We keep an allowlist so the model can choose safely.
+// Note: exports will still work offline using fallbacks, but the fancy fonts require network access.
+const FONT_PAIRS = [
+  {
+    key: 'professional-inter',
+    label: 'Professional: Inter (clean sans) for headings and body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    heading: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  },
+  {
+    key: 'premium-grotesk',
+    label: 'Premium modern: Space Grotesk headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    heading: '"Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  },
+  {
+    key: 'editorial-playfair',
+    label: 'Editorial: Playfair Display headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    heading: '"Playfair Display", ui-serif, Georgia, "Times New Roman", Times, serif'
+  },
+  {
+    key: 'editorial-fraunces',
+    label: 'Editorial modern: Fraunces headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    heading: '"Fraunces", ui-serif, Georgia, "Times New Roman", Times, serif'
+  },
+  {
+    key: 'product-jakarta',
+    label: 'Product/UX: Plus Jakarta Sans headings + DM Sans body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap',
+    body: '"DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    heading: '"Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  },
+  {
+    key: 'dev-plex-mono',
+    label: 'Developer: IBM Plex Mono headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    heading: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+  }
+];
+
+const FONT_PAIR_HELP = FONT_PAIRS.map(p => `${p.key} — ${p.label}`).join('\n');
+
+function getFontPair(key) {
+  const k = String(key || '').trim();
+  if (!k) return null;
+  return FONT_PAIRS.find(p => p.key === k) || null;
+}
+
+function ensureFontPairLoaded(key) {
+  const pair = getFontPair(key);
+  if (!pair?.cssUrl) return;
+  if (document.querySelector(`link[data-font-pair="${pair.key}"]`)) return;
+
+  // Preconnect once.
+  if (!document.querySelector('link[data-font-preconnect="google-fonts"]')) {
+    const pre1 = document.createElement('link');
+    pre1.rel = 'preconnect';
+    pre1.href = 'https://fonts.googleapis.com';
+    pre1.dataset.fontPreconnect = 'google-fonts';
+    document.head.appendChild(pre1);
+    const pre2 = document.createElement('link');
+    pre2.rel = 'preconnect';
+    pre2.href = 'https://fonts.gstatic.com';
+    pre2.crossOrigin = 'anonymous';
+    pre2.dataset.fontPreconnect = 'google-fonts';
+    document.head.appendChild(pre2);
+  }
+
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = pair.cssUrl;
+  link.dataset.fontPair = pair.key;
+  document.head.appendChild(link);
+}
+
+function fontLinksMarkup() {
+  const pair = getFontPair(state.fontPairKey);
+  if (!pair?.cssUrl) return '';
+  // Keep it simple and standards-friendly.
+  return [
+    `<link rel="preconnect" href="https://fonts.googleapis.com">`,
+    `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`,
+    `<link rel="stylesheet" href="${pair.cssUrl}">`,
+  ].join('');
+}
 
 function runDemoMode() {
   // A reliable, assessor-friendly run: sample CV + professional prompt + subtle motion.
@@ -909,6 +1005,9 @@ function filterPlanByRevision(plan, prevPlan, intents) {
   if (!intents.changeLayout && !allowQualityTweaks) out.layout = prevPlan.layout;
   if (!intents.changeMotion && !allowQualityTweaks) out.motion = prevPlan.motion;
 
+  // Fonts: preserve unless the revision is about typography or a general improvement.
+  if (!intents.changeTypography && !allowQualityTweaks) out.fontPair = prevPlan.fontPair;
+
   // Palette: only allow base/background shifts if explicitly requested.
   if (intents.keepBackground || (!intents.changeBackground && !intents.changePalette && !intents.wantsDark && !intents.wantsLight)) {
     // Keep base palette, but allow accent changes.
@@ -957,7 +1056,8 @@ async function llmParse(rawText) {
 }
 
 async function llmGenerate(cvText, prompt, stream = true, previousPlan = null) {
-  const payload = previousPlan ? { cvText, prompt, previousPlan } : { cvText, prompt };
+  const promptWithFonts = `${prompt || ''}\n\nAvailable fontPair keys (choose one and return as fontPair):\n${FONT_PAIR_HELP}`;
+  const payload = previousPlan ? { cvText, prompt: promptWithFonts, previousPlan } : { cvText, prompt: promptWithFonts };
   if (stream) {
     const res = await fetch('/api/generate?stream=1', {
       method: 'POST',
@@ -1037,7 +1137,8 @@ async function exportHTML() {
   } catch (e) {}
 
   // Export as a simple standalone HTML file. Keep project links as normal anchors.
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Exported Portfolio</title><style>${css}</style></head><body>${preview.innerHTML}</body></html>`;
+  // Note: Fancy fonts load from Google Fonts; if offline, fallbacks will be used.
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Exported Portfolio</title>${fontLinksMarkup()}<style>${css}</style></head><body>${preview.innerHTML}</body></html>`;
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
 
@@ -1345,7 +1446,7 @@ async function exportZIP() {
     html = html.split(u).join(`assets/${fname}`);
   }
 
-  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Portfolio</title><link rel="stylesheet" href="style.css"></head><body>${html}</body></html>`;
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Portfolio</title>${fontLinksMarkup()}<link rel="stylesheet" href="style.css"></head><body>${html}</body></html>`;
 
   zip.file('index.html', doc);
   zip.file('style.css', css);
@@ -1488,6 +1589,14 @@ function getProfessionFamily(parsed, prompt) {
 
 function fontPlanFor(prompt = "", mode = "default", visualPlan = {}, family = "general") {
   const text = String(prompt || "").toLowerCase();
+
+  // If a fontPair was chosen by the LLM (or preserved across revisions), use it.
+  const chosenKey = String(visualPlan?.fontPair || state.fontPairKey || '').trim();
+  const chosen = getFontPair(chosenKey);
+  if (chosen) {
+    ensureFontPairLoaded(chosen.key);
+    return { body: chosen.body, heading: chosen.heading, key: chosen.key };
+  }
   const wantsEditorial =
     mode === 'cinematic-dark' ||
     visualPlan?.variant === 'artistic' ||
@@ -1501,17 +1610,19 @@ function fontPlanFor(prompt = "", mode = "default", visualPlan = {}, family = "g
 
   const wantsProfessional = includesAny(text, ["professional", "recruiter", "ats", "hiring manager", "clean", "minimal", "corporate"]);
 
+  // Fallback heuristic font choice (still uses fancy font pairs when possible).
+  const fallbackKey = wantsTech
+    ? 'dev-plex-mono'
+    : (wantsEditorial ? 'editorial-playfair' : (wantsProfessional ? 'professional-inter' : 'premium-grotesk'));
+  const pair = getFontPair(fallbackKey);
+  if (pair) {
+    ensureFontPairLoaded(pair.key);
+    try { if (!state.fontPairKey) state.fontPairKey = pair.key; } catch (e) {}
+    return { body: pair.body, heading: pair.heading, key: pair.key };
+  }
+
   const bodySans = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-  const headingSans = bodySans;
-  const headingSerif = 'ui-serif, Georgia, "Times New Roman", Times, serif';
-  const headingMono = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-
-  let heading = headingSans;
-  if (wantsTech && !wantsEditorial) heading = headingMono;
-  if (wantsEditorial && !wantsTech) heading = headingSerif;
-  if (wantsProfessional && mode !== 'cinematic-dark') heading = headingSans;
-
-  return { body: bodySans, heading };
+  return { body: bodySans, heading: bodySans, key: null };
 }
 
 
@@ -1989,6 +2100,7 @@ async function renderPortfolio() {
       motion: state.motion,
       layout: state.layout,
       palette: state.palette ? { ...state.palette } : null,
+      fontPair: state.fontPairKey || null,
       sectionOrder: state.lastPortfolio.sectionOrder || null,
       contentPlan: state.lastPortfolio.contentPlan || null,
       visualPlan: state.lastPortfolio.visualPlan || null,
@@ -2103,6 +2215,7 @@ async function renderPortfolio() {
           sectionOrder: plan?.sectionOrder,
           contentPlan: plan?.contentPlan,
           visualPlan: plan?.visualPlan,
+          fontPair: plan?.fontPair,
         };
         parsed = sanitizeGenerated(parsed, normalizedCV);
       } catch (e) {
@@ -2131,6 +2244,15 @@ async function renderPortfolio() {
     state.lastProjects = normalizeProjects(planned?.projects || []);
     state.revision = "";
     state.family = getProfessionFamily(planned, state.prompt);
+
+    // Typography: set and load the chosen font pair.
+    try {
+      const chosen = String(planned?.fontPair || planned?.visualPlan?.fontPair || state.fontPairKey || '').trim();
+      if (chosen) {
+        state.fontPairKey = chosen;
+        ensureFontPairLoaded(chosen);
+      }
+    } catch (e) {}
 
     // Guardrail: if the user revision is clearly about accent/highlight/text colour,
     // do not allow the background/base palette to get replaced as a side-effect.
