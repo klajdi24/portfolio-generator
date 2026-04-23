@@ -169,7 +169,7 @@ a { color: inherit; }
 
 /* Make the "default" (non-cinematic) output look intentional across presets */
 .portfolio.layout-auto:not(.cinematic) {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
 }
 .portfolio:not(.cinematic) h1 { letter-spacing: -0.02em; }
 .portfolio:not(.cinematic) .section { margin-top: 44px; }

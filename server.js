@@ -638,6 +638,10 @@ Font rules:
 - You MUST set fontPair to one of the provided fontPair keys (you will be given a list in the user prompt).
 - Choose a fontPair appropriate to the prompt and the CV title/role.
 
+Palette rules:
+- Default to a dark, premium portfolio palette (base/background dark).
+- Only choose a light/white background if the user explicitly asks for light/white/bright.
+
 Quality rules:
 - Be specific to the style prompt.
 - Ensure high contrast and readable typography.

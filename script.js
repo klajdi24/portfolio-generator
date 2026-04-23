@@ -64,43 +64,43 @@ const FONT_PAIRS = [
     key: 'professional-inter',
     label: 'Professional: Inter (clean sans) for headings and body',
     cssUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
-    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    heading: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
   },
   {
     key: 'premium-grotesk',
     label: 'Premium modern: Space Grotesk headings + Inter body',
     cssUrl: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
-    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    heading: '"Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
   },
   {
     key: 'editorial-playfair',
     label: 'Editorial: Playfair Display headings + Inter body',
     cssUrl: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap',
-    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    heading: '"Playfair Display", ui-serif, Georgia, "Times New Roman", Times, serif'
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Playfair Display', ui-serif, Georgia, 'Times New Roman', Times, serif"
   },
   {
     key: 'editorial-fraunces',
     label: 'Editorial modern: Fraunces headings + Inter body',
     cssUrl: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@300;400;500;600;700;800&display=swap',
-    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    heading: '"Fraunces", ui-serif, Georgia, "Times New Roman", Times, serif'
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Fraunces', ui-serif, Georgia, 'Times New Roman', Times, serif"
   },
   {
     key: 'product-jakarta',
     label: 'Product/UX: Plus Jakarta Sans headings + DM Sans body',
     cssUrl: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap',
-    body: '"DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    heading: '"Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    body: "'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
   },
   {
     key: 'dev-plex-mono',
     label: 'Developer: IBM Plex Mono headings + Inter body',
     cssUrl: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap',
-    body: '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    heading: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
   }
 ];
 
@@ -1009,15 +1009,17 @@ function filterPlanByRevision(plan, prevPlan, intents) {
   if (!intents.changeTypography && !allowQualityTweaks) out.fontPair = prevPlan.fontPair;
 
   // Palette: only allow base/background shifts if explicitly requested.
+  // Default: preserve previous palette fully, but allow accent changes (amber/glow) and small legibility tweaks.
   if (intents.keepBackground || (!intents.changeBackground && !intents.changePalette && !intents.wantsDark && !intents.wantsLight)) {
-    // Keep base palette, but allow accent changes.
+    const prevP = (prevPlan.palette && typeof prevPlan.palette === 'object') ? prevPlan.palette : {};
     const p = (plan.palette && typeof plan.palette === 'object') ? plan.palette : {};
     out.palette = {
-      amber: p.amber,
-      glow: p.glow,
-      border: p.border,
-      steel: p.steel,
-      textMuted: p.textMuted,
+      ...prevP,
+      amber: p.amber || prevP.amber,
+      glow: p.glow || prevP.glow,
+      border: p.border || prevP.border,
+      steel: p.steel || prevP.steel,
+      textMuted: p.textMuted || prevP.textMuted,
     };
   }
 
@@ -1558,11 +1560,16 @@ function paletteFor(prompt, mode) {
     };
   }
 
-  const base = text.includes("dark") ? "#0f1012" : "#f7f7f7";
-  const textColor = text.includes("dark") ? "#f2f2f2" : "#1c1c1c";
-  const surface = text.includes("dark") ? "#15181d" : "#ffffff";
-  const surfaceAlt = text.includes("dark") ? "#1b2028" : "#f1f1f1";
-  const border = text.includes("dark") ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  // Default to dark (matches the app shell). Only switch to light if explicitly requested.
+  const wantsLight = includesAny(text, ["light", "light mode", "white", "bright", "paper", "ivory"]) && !includesAny(text, ["dark", "dark mode", "noir", "midnight", "black"]);
+  const wantsDark = includesAny(text, ["dark", "dark mode", "noir", "midnight", "black"]);
+  const useDark = wantsDark || !wantsLight;
+
+  const base = useDark ? "#0f1012" : "#f7f7f7";
+  const textColor = useDark ? "#f2f2f2" : "#1c1c1c";
+  const surface = useDark ? "#15181d" : "#ffffff";
+  const surfaceAlt = useDark ? "#1b2028" : "#f1f1f1";
+  const border = useDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
   const glow = accent ? "rgba(227,90,90,0.25)" : "rgba(240,184,75,0.25)";
   return {
     base,
@@ -1571,7 +1578,7 @@ function paletteFor(prompt, mode) {
     steel: "#7a8aa2",
     amber,
     text: textColor,
-    textMuted: text.includes("dark") ? "#b7b7b7" : "#555",
+    textMuted: useDark ? "#b7b7b7" : "#555",
     border,
     glow
   };
@@ -1621,7 +1628,7 @@ function fontPlanFor(prompt = "", mode = "default", visualPlan = {}, family = "g
     return { body: pair.body, heading: pair.heading, key: pair.key };
   }
 
-  const bodySans = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  const bodySans = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
   return { body: bodySans, heading: bodySans, key: null };
 }
 
