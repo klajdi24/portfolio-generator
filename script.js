@@ -885,75 +885,8 @@ async function exportHTML() {
     css = await res.text();
   } catch (e) {}
 
-  const projects = state.lastProjects || normalizeProjects(state.parsed?.projects || []);
-  const modalMarkup = `
-  <div id="projectModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-backdrop" data-modal-close="1"></div>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button type="button" class="modal-close" aria-label="Close" data-modal-close="1">×</button>
-      <div class="modal-content">
-        <div class="modal-media" id="modalMedia"></div>
-        <div class="modal-copy">
-          <h3 id="modalTitle">Project</h3>
-          <div class="modal-meta" id="modalMeta"></div>
-          <p class="modal-desc" id="modalDesc"></p>
-          <div class="modal-actions" id="modalActions"></div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  const modalScript = `
-  <script>
-  window.__PORTFOLIO_PROJECTS__ = ${JSON.stringify(projects || []).replace(/<\//g, '<\\/')};
-  (function(){
-    const qs = (s, r=document) => r.querySelector(s);
-    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
-    const modal = () => qs('#projectModal');
-    const close = () => {
-      const m = modal();
-      if (!m) return;
-      m.classList.add('hidden');
-      m.setAttribute('aria-hidden','true');
-      try { qs('#modalMedia')?.querySelector('video')?.pause?.(); } catch (e) {}
-    };
-    const open = (idx) => {
-      const p = (window.__PORTFOLIO_PROJECTS__||[])[idx];
-      const m = modal();
-      if (!p || !m) return;
-      qs('#modalTitle').textContent = p.title || 'Project';
-      qs('#modalDesc').textContent = p.desc || '';
-      const meta = [];
-      if (p.year) meta.push('Year: '+p.year);
-      if (p.role) meta.push('Role: '+p.role);
-      if (p.tools) meta.push('Tools: '+(Array.isArray(p.tools)?p.tools.join(', '):p.tools));
-      qs('#modalMeta').innerHTML = meta.map(x=>'<span>'+esc(x)+'</span>').join('');
-      const mediaUrl = p.mediaUrl || p.posterUrl || '';
-      const isVideo = /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(mediaUrl);
-      qs('#modalMedia').innerHTML = mediaUrl ? (isVideo ? '<video controls playsinline preload="metadata" src="'+esc(mediaUrl)+'"></video>' : '<img alt="'+esc(p.title||'Project')+'" src="'+esc(mediaUrl)+'"/>') : '<div class="help">No media attached.</div>';
-      const actions = [];
-      if (p.linkUrl) actions.push('<a class="primary" target="_blank" rel="noopener" href="'+esc(p.linkUrl)+'">Open project link</a>');
-      if (p.mediaUrl) actions.push('<a target="_blank" rel="noopener" href="'+esc(p.mediaUrl)+'">Open media</a>');
-      if (p.mediaUrl) actions.push('<a download href="'+esc(p.mediaUrl)+'">Download media</a>');
-      qs('#modalActions').innerHTML = actions.join('');
-      m.classList.remove('hidden');
-      m.setAttribute('aria-hidden','false');
-    };
-    document.addEventListener('click', (e) => {
-      const t = e.target;
-      if (!t) return;
-      if (t.closest && t.closest('[data-modal-close]')) { close(); e.preventDefault(); return; }
-      const link = t.closest && t.closest('.project-link');
-      if (link && link.dataset && link.dataset.projectIdx != null) {
-        const idx = Number(link.dataset.projectIdx);
-        if (Number.isFinite(idx)) { open(idx); e.preventDefault(); return; }
-      }
-    });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-  })();
-  </script>`;
-
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Exported Portfolio</title><style>${css}</style></head><body>${preview.innerHTML}${modalMarkup}${modalScript}</body></html>`;
+  // Export as a simple standalone HTML file. Keep project links as normal anchors.
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Exported Portfolio</title><style>${css}</style></head><body>${preview.innerHTML}</body></html>`;
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
 
@@ -1261,84 +1194,7 @@ async function exportZIP() {
     html = html.split(u).join(`assets/${fname}`);
   }
 
-  const projects = (state.lastProjects || normalizeProjects(state.parsed?.projects || [])).map(p => {
-    const fix = (v) => (v && typeof v === 'string') ? v.replace(/\/(?:uploads)\//g, 'assets/') : v;
-    return {
-      ...p,
-      mediaUrl: fix(p.mediaUrl),
-      posterUrl: fix(p.posterUrl),
-      linkUrl: p.linkUrl,
-    };
-  });
-
-  const modalMarkup = `
-  <div id="projectModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-backdrop" data-modal-close="1"></div>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button type="button" class="modal-close" aria-label="Close" data-modal-close="1">×</button>
-      <div class="modal-content">
-        <div class="modal-media" id="modalMedia"></div>
-        <div class="modal-copy">
-          <h3 id="modalTitle">Project</h3>
-          <div class="modal-meta" id="modalMeta"></div>
-          <p class="modal-desc" id="modalDesc"></p>
-          <div class="modal-actions" id="modalActions"></div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  const modalScript = `
-  <script>
-  window.__PORTFOLIO_PROJECTS__ = ${JSON.stringify(projects || []).replace(/<\//g, '<\\/')};
-  (function(){
-    const qs = (s, r=document) => r.querySelector(s);
-    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
-    const modal = () => qs('#projectModal');
-    const close = () => {
-      const m = modal();
-      if (!m) return;
-      m.classList.add('hidden');
-      m.setAttribute('aria-hidden','true');
-      try { qs('#modalMedia')?.querySelector('video')?.pause?.(); } catch (e) {}
-    };
-    const open = (idx) => {
-      const p = (window.__PORTFOLIO_PROJECTS__||[])[idx];
-      const m = modal();
-      if (!p || !m) return;
-      qs('#modalTitle').textContent = p.title || 'Project';
-      qs('#modalDesc').textContent = p.desc || '';
-      const meta = [];
-      if (p.year) meta.push('Year: '+p.year);
-      if (p.role) meta.push('Role: '+p.role);
-      if (p.tools) meta.push('Tools: '+(Array.isArray(p.tools)?p.tools.join(', '):p.tools));
-      qs('#modalMeta').innerHTML = meta.map(x=>'<span>'+esc(x)+'</span>').join('');
-      const mediaUrl = p.mediaUrl || p.posterUrl || '';
-      const isVideo = /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(mediaUrl);
-      qs('#modalMedia').innerHTML = mediaUrl ? (isVideo ? '<video controls playsinline preload="metadata" src="'+esc(mediaUrl)+'"></video>' : '<img alt="'+esc(p.title||'Project')+'" src="'+esc(mediaUrl)+'"/>') : '<div class="help">No media attached.</div>';
-      const actions = [];
-      if (p.linkUrl) actions.push('<a class="primary" target="_blank" rel="noopener" href="'+esc(p.linkUrl)+'">Open project link</a>');
-      if (p.mediaUrl) actions.push('<a target="_blank" rel="noopener" href="'+esc(p.mediaUrl)+'">Open media</a>');
-      if (p.mediaUrl) actions.push('<a download href="'+esc(p.mediaUrl)+'">Download media</a>');
-      qs('#modalActions').innerHTML = actions.join('');
-      m.classList.remove('hidden');
-      m.setAttribute('aria-hidden','false');
-    };
-    document.addEventListener('click', (e) => {
-      const t = e.target;
-      if (!t) return;
-      if (t.closest && t.closest('[data-modal-close]')) { close(); e.preventDefault(); return; }
-      const link = t.closest && t.closest('.project-link');
-      if (link && link.dataset && link.dataset.projectIdx != null) {
-        const idx = Number(link.dataset.projectIdx);
-        if (Number.isFinite(idx)) { open(idx); e.preventDefault(); return; }
-      }
-    });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-  })();
-  </script>`;
-
-  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Portfolio</title><link rel="stylesheet" href="style.css"></head><body>${html}${modalMarkup}${modalScript}</body></html>`;
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Portfolio</title><link rel="stylesheet" href="style.css"></head><body>${html}</body></html>`;
 
   zip.file('index.html', doc);
   zip.file('style.css', css);
@@ -2565,8 +2421,10 @@ function init() {
 
 let __interactiveToneHandler = null;
 function initInteractiveTone() {
-  const preview = qs('#preview');
-  if (!preview) return;
+  const preview = qs('#outputPreview') || qs('#preview');
+  // Tone drift was designed for the old scrollable sidebar preview. Skip it when
+  // using the full-width output (page scroll) to avoid weird behaviour.
+  if (!preview || preview.id !== 'preview') return;
 
   if (!__interactiveToneHandler) {
     __interactiveToneHandler = () => {
@@ -2598,7 +2456,7 @@ function initInteractiveTone() {
 // Videos in project cards should not autoplay. If the user chose a higher-motion
 // profile, we can play videos on hover/focus, and pause them when off-screen.
 function hoverVideoControl() {
-  const preview = qs('#preview');
+  const preview = qs('#outputPreview') || qs('#preview');
   if (!preview) return;
   const motion = String(window.state?.motion || 'auto');
   const allow = (motion === 'dynamic' || motion === 'playful' || motion === 'extreme');
@@ -2629,7 +2487,7 @@ function hoverVideoControl() {
 
 let __videoObserver = null;
 function observeVideos() {
-  const preview = qs('#preview');
+  const preview = qs('#outputPreview') || qs('#preview');
   if (!preview) return;
   if (!('IntersectionObserver' in window)) return;
 
@@ -2642,7 +2500,7 @@ function observeVideos() {
           try { v.pause(); } catch (err) {}
         }
       }
-    }, { root: preview, threshold: 0.15 });
+    }, { root: (preview.id === 'preview' ? preview : null), threshold: 0.15 });
   }
 
   preview.querySelectorAll('video.project-media, video.hero-media').forEach(v => {
@@ -3080,17 +2938,6 @@ document.addEventListener('click', (e) => {
     closeProjectModal();
     e.preventDefault();
     return;
-  }
-
-  // Project card click: open modal instead of navigating/downloading media.
-  const projectLink = t.closest?.('.project-link');
-  if (projectLink?.dataset?.projectIdx != null) {
-    const idx = Number(projectLink.dataset.projectIdx);
-    if (Number.isFinite(idx)) {
-      openProjectModal(idx);
-      e.preventDefault();
-      return;
-    }
   }
 
   // Preview actions (generated portfolio)
