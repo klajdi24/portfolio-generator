@@ -829,6 +829,9 @@ function buildRevisionPatch(revision = "") {
         glow: accentPalette.glow,
         border: accentPalette.border
       };
+      // If the user is asking about words/text/highlights, make the accent more visible
+      // by applying it to headings/links too.
+      patch.visualPlan.accentText = true;
     }
   }
   return patch;
@@ -851,6 +854,89 @@ function applyRevisionPatch(parsed, revision) {
   if (patch.motion) merged.motion = patch.motion;
   if (patch.layout) merged.layout = patch.layout;
   return merged;
+}
+
+function revisionIntents(revision = '') {
+  const t = String(revision || '').toLowerCase();
+  const improveGeneral = includesAny(t, [
+    'improve',
+    'make it better',
+    'better',
+    'upgrade',
+    'polish',
+    'refine',
+    'elevate',
+    'make it great',
+    'make it stronger',
+    'more premium',
+    'more high-end',
+    'higher end',
+    'more modern',
+    'more professional',
+    'more recruiter',
+    'more clean',
+  ]);
+  const wants = {
+    any: !!t.trim(),
+    improveGeneral,
+    changeLayout: includesAny(t, ['layout', 'case study', 'case-study', 'recruiter', 'showcase', 'editorial layout', 'grid', 'columns']),
+    changeMotion: includesAny(t, ['motion', 'animation', 'animations', 'dynamic', 'playful', 'cinematic', 'extreme', 'reduce motion', 'less motion', 'no motion']),
+    changeTypography: includesAny(t, ['font', 'fonts', 'typography', 'typeface', 'serif', 'mono', 'monospace', 'editorial', 'professional']),
+    changeCards: includesAny(t, ['cards', 'project cards', 'gallery', 'visual-first', 'visual first', 'cinematic cards', 'clean cards', 'minimal cards', 'flat cards']),
+    changeHero: includesAny(t, ['hero', 'poster', 'split hero', 'split-hero', 'headline']),
+    changeSpacing: includesAny(t, ['spacing', 'whitespace', 'white space', 'negative space', 'spacious', 'air', 'padding']),
+    changeBackground: includesAny(t, ['background', 'bg', 'base', 'canvas', 'page background', 'page']) && !includesAny(t, ['keep the background', 'keep background', "don't change the background", 'do not change the background', 'leave the background', 'background should stay', 'keep the current background', 'keep current background']),
+    keepBackground: includesAny(t, ['keep the background', 'keep background', 'keep the current background', 'keep current background', "don't change the background", 'do not change the background', 'leave the background', 'background should stay', 'keep the background colour', 'keep the background color']),
+    changePalette: includesAny(t, ['palette', 'theme', 'colour scheme', 'color scheme']) || includesAny(t, ['more colourful', 'more colorful', 'more color', 'more colour']),
+    wantsDark: includesAny(t, ['dark palette', 'keep palette dark', 'make it dark', 'darker', 'dark mode']) || (includesAny(t, ['palette', 'theme']) && t.includes('dark')),
+    wantsLight: includesAny(t, ['light palette', 'make it light', 'lighter', 'light mode']) || (includesAny(t, ['palette', 'theme']) && t.includes('light')),
+    changeAccent: includesAny(t, ['accent', 'highlight', 'highlights', 'highlight colour', 'highlight color', 'link colour', 'link color', 'words', 'text', 'headings', 'titles'])
+      && includesAny(t, ['yellow', 'gold', 'amber', 'blue', 'navy', 'midnight', 'red', 'crimson', 'teal', 'purple', 'green', 'orange', 'pink', 'white', 'black', 'ivory', 'monochrome']),
+    changeMode: includesAny(t, ['cinematic', 'playful'])
+  };
+  return wants;
+}
+
+function filterPlanByRevision(plan, prevPlan, intents) {
+  if (!plan || typeof plan !== 'object' || !prevPlan || typeof prevPlan !== 'object') return plan;
+  const out = { ...plan };
+
+  // Default behavior: preserve everything not explicitly requested.
+  // If the user says "improve/polish/elevate", allow the model to adjust layout/motion/typography
+  // for quality, but still preserve palette/background unless explicitly requested.
+  const allowQualityTweaks = !!intents.improveGeneral;
+
+  if (!intents.changeLayout && !allowQualityTweaks) out.layout = prevPlan.layout;
+  if (!intents.changeMotion && !allowQualityTweaks) out.motion = prevPlan.motion;
+
+  // Palette: only allow base/background shifts if explicitly requested.
+  if (intents.keepBackground || (!intents.changeBackground && !intents.changePalette && !intents.wantsDark && !intents.wantsLight)) {
+    // Keep base palette, but allow accent changes.
+    const p = (plan.palette && typeof plan.palette === 'object') ? plan.palette : {};
+    out.palette = {
+      amber: p.amber,
+      glow: p.glow,
+      border: p.border,
+      steel: p.steel,
+      textMuted: p.textMuted,
+    };
+  }
+
+  // Plans: keep as baseline unless requested.
+  // If the user asked for a general improvement, allow visualPlan to change (typography/hierarchy),
+  // otherwise preserve it.
+  if (!intents.changeHero && !intents.changeCards && !intents.changeSpacing && !intents.changeTypography && !allowQualityTweaks) {
+    out.visualPlan = prevPlan.visualPlan;
+  }
+  if (!intents.changeTypography && out.visualPlan && typeof out.visualPlan === 'object' && prevPlan.visualPlan && typeof prevPlan.visualPlan === 'object') {
+    // Still allow other visual tweaks, but preserve variant when not requested.
+    out.visualPlan = { ...out.visualPlan, variant: prevPlan.visualPlan.variant };
+  }
+
+  if (!intents.changePalette && !intents.changeLayout && !allowQualityTweaks) out.sectionOrder = prevPlan.sectionOrder;
+  if (!intents.changeLayout && !allowQualityTweaks) out.contentPlan = prevPlan.contentPlan;
+
+  return out;
 }
 
 function applyPlans(parsed, prompt, mode) {
@@ -1723,7 +1809,7 @@ function renderCinematicPortfolio(parsed, palette) {
   const heroTreatment = visualPlan.heroTreatment || "classic";
 
   return `
-  <div class="portfolio cinematic motion-${state.motion || "cinematic"} card-${visualPlan.cardTreatment || "standard"} ${visualPlan.spacing === "spacious" ? "spacious" : ""} layout-${layout} variant-${variant} bg-grain-${bgGrain} bg-grid-${bgGrid} hero-${heroTreatment}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
+  <div class="portfolio cinematic ${visualPlan.accentText ? 'accent-text' : ''} motion-${state.motion || "cinematic"} card-${visualPlan.cardTreatment || "standard"} ${visualPlan.spacing === "spacious" ? "spacious" : ""} layout-${layout} variant-${variant} bg-grain-${bgGrain} bg-grid-${bgGrid} hero-${heroTreatment}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
     <header class="portfolio-head">
       <div>
         <p class="summary">${summary}</p>
@@ -1801,7 +1887,7 @@ function renderDefault(parsed, palette) {
 
   const layout = (parsed.layout || state.layout || "auto").toLowerCase();
   return `
-  <div class="portfolio ${isPlayful ? 'playful' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} hero-${(parsed.visualPlan?.heroTreatment || 'classic')} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout} variant-${(parsed.visualPlan?.variant || 'base')}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
+  <div class="portfolio ${isPlayful ? 'playful' : ''} ${(parsed.visualPlan?.accentText) ? 'accent-text' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} hero-${(parsed.visualPlan?.heroTreatment || 'classic')} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout} variant-${(parsed.visualPlan?.variant || 'base')}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
 
     <section class="hero-lite ${isPlayful ? 'hero-playful' : ''}">
       <div class="hero-lite-copy">
@@ -1892,6 +1978,7 @@ async function renderPortfolio() {
     let parsed = null;
     const basePrompt = state.prompt || '';
     const revision = state.revision || '';
+    const intents = revisionIntents(revision);
     const promptForMode = revision ? `${basePrompt}\n${revision}` : basePrompt;
     const promptForLLM = revision
       ? `${basePrompt}\n\nRevision request: ${revision}\nReturn updated palette, motion, layout, contentPlan, visualPlan reflecting the revision.`
@@ -1906,23 +1993,6 @@ async function renderPortfolio() {
       contentPlan: state.lastPortfolio.contentPlan || null,
       visualPlan: state.lastPortfolio.visualPlan || null,
     } : null;
-
-    const keepBg = (() => {
-      const t = String(revision || '').toLowerCase();
-      if (!t) return false;
-      return includesAny(t, [
-        'keep the background',
-        'keep background',
-        'keep the current background',
-        'keep current background',
-        "don't change the background",
-        'do not change the background',
-        'leave the background',
-        'background should stay',
-        'keep the background colour',
-        'keep the background color',
-      ]);
-    })();
     const coerceArrayStrings = (v) => Array.isArray(v) ? v.map(x => String(x || '').trim()).filter(Boolean) : [];
     const coerceProjects = (v) => Array.isArray(v)
       ? v.map(normalizeProjectObject).filter(p => p && (p.title || p.desc || p.mediaUrl || p.linkUrl))
@@ -2020,11 +2090,9 @@ async function renderPortfolio() {
         // Ask LLM for style + layout plan only.
         let plan = state.useLLM ? await llmGenerate(JSON.stringify(parsedCV), promptForLLM, state.useStream, prevStylePlan) : null;
 
-        // Guardrail: if the revision explicitly says to keep the background,
-        // ignore any LLM-proposed base/surface palette changes.
-        if (keepBg && plan && typeof plan === 'object' && plan.palette && typeof plan.palette === 'object') {
-          const { amber, glow, border, steel, textMuted } = plan.palette;
-          plan.palette = { amber, glow, border, steel, textMuted };
+        // Revisions should behave like a patch: preserve anything not mentioned.
+        if (revision && prevStylePlan) {
+          plan = filterPlanByRevision(plan, prevStylePlan, intents);
         }
         // Merge: keep content from parsedCV, take style fields from plan.
         parsed = {
@@ -2044,8 +2112,19 @@ async function renderPortfolio() {
     } else {
       parsed = parseCV(normalizedCV);
     }
-    state.mode = parsed?.theme || state.stylePreset && stylePresets[state.stylePreset]?.mode || detectMode(promptForMode, parsed);
+    const detected = parsed?.theme || state.stylePreset && stylePresets[state.stylePreset]?.mode || detectMode(promptForMode, parsed);
+    // Default: keep the current mode during revisions unless the revision explicitly requests a mode change.
+    state.mode = revision && !intents.changeMode ? (state.mode || detected) : detected;
+
     let planned = applyPlans(parsed, basePrompt, state.mode);
+    // Preserve current plans during revisions unless explicitly asked to change them.
+    if (revision && state.lastPortfolio) {
+      if (!intents.changeLayout && state.lastPortfolio.contentPlan) planned.contentPlan = state.lastPortfolio.contentPlan;
+      if (!intents.changeHero && !intents.changeCards && !intents.changeSpacing && !intents.changeTypography && state.lastPortfolio.visualPlan) {
+        planned.visualPlan = state.lastPortfolio.visualPlan;
+      }
+      if (!intents.changeLayout && state.lastPortfolio.sectionOrder) planned.sectionOrder = state.lastPortfolio.sectionOrder;
+    }
     planned = applyRevisionPatch(planned, state.revision);
     state.parsed = planned;
     state.lastPortfolio = planned;
@@ -2072,8 +2151,8 @@ async function renderPortfolio() {
     const basePalette = (revision && state.palette)
       ? { ...state.palette }
       : (state.stylePreset && stylePresets[state.stylePreset]?.palette ? stylePresets[state.stylePreset].palette : paletteFor(basePrompt, state.mode));
-    const mergedPalette = planned?.palette ? { ...basePalette, ...planned.palette } : basePalette;
-    state.palette = mergedPalette;
+  const mergedPalette = planned?.palette ? { ...basePalette, ...stripUndefined(planned.palette) } : basePalette;
+  state.palette = mergedPalette;
     const presetMotion = (state.stylePreset && stylePresets[state.stylePreset]?.motion) || null;
     const wantsReducedMotion = /reduce motion|less motion|no motion|no animation|no animations|static|calm|minimal|clean|professional|recruiter/i.test(promptForLLM || "");
     const wantsPlayfulMotion = /playful|fun|bouncy/i.test(promptForLLM || "");
@@ -2726,6 +2805,15 @@ function safeMediaSrc(src) {
   if (h.startsWith('assets/')) return h;
   if (/^https?:\/\//i.test(h)) return h;
   return null;
+}
+
+function stripUndefined(obj) {
+  const out = {};
+  if (!obj || typeof obj !== 'object') return out;
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) out[k] = v;
+  }
+  return out;
 }
 
 function niceRepoTitle(name = '') {

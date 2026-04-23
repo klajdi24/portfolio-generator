@@ -506,6 +506,14 @@ textarea[readonly] { opacity: 0.85; }
 
 .portfolio.variant-tech .project-card { border-style: dashed; }
 .portfolio.variant-tech .hero-kicker { letter-spacing: 0.28em; }
+
+/* Make accent colour visibly affect text when requested by revisions */
+.portfolio.accent-text .hero-kicker,
+.portfolio.accent-text .section-header h2,
+.portfolio.accent-text a {
+  color: var(--amber);
+}
+.portfolio.accent-text .section-header p { color: var(--text-muted); }
 .portfolio.cinematic::before { content: ""; position: absolute; inset: -12% -12%; background: radial-gradient(circle at 20% 20%, rgba(59,74,94,0.45), transparent 45%), radial-gradient(circle at 80% 20%, rgba(200,138,58,0.2), transparent 40%), radial-gradient(circle at 60% 80%, rgba(59,74,94,0.3), transparent 50%), linear-gradient(180deg, rgba(0,0,0,0.55), transparent 60%); pointer-events: none; opacity: var(--tone-shift, 0.9); filter: hue-rotate(var(--hue-shift, 0deg)); transition: filter 0.6s ease; }
 .portfolio.cinematic::after { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 1px, transparent 1px, transparent 3px); opacity: 0.16; pointer-events: none; filter: hue-rotate(var(--hue-shift, 0deg)); transition: filter 0.6s ease; }
 
