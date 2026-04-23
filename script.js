@@ -707,6 +707,19 @@ function buildRevisionPatch(revision = "") {
   if (!text) return null;
   const patch = { contentPlan: {}, visualPlan: {}, palette: {}, motion: null, layout: null };
 
+  const keepBackground = includesAny(text, [
+    "keep the background",
+    "keep background",
+    "keep the current background",
+    "keep current background",
+    "don't change the background",
+    "do not change the background",
+    "leave the background",
+    "background should stay",
+    "keep the background colour",
+    "keep the background color",
+  ]);
+
   // Professional / recruiter-friendly revision.
   if (includesAny(text, ["professional", "recruiter", "ats", "hiring manager", "job application", "clean", "corporate"])) {
     patch.layout = patch.layout || "recruiter";
@@ -780,7 +793,7 @@ function buildRevisionPatch(revision = "") {
 
   // Color handling: treat most colour revisions as ACCENT changes unless the user explicitly
   // mentions the background/page/base. This prevents unintended base/background flips.
-  const mentionsBackground = includesAny(text, ["background", "bg", "page background", "base", "canvas", "page"]) && !includesAny(text, ["background noise", "grain", "grid"]);
+  const mentionsBackground = !keepBackground && includesAny(text, ["background", "bg", "page background", "base", "canvas", "page"]) && !includesAny(text, ["background noise", "grain", "grid"]);
   const wantsAccentText = includesAny(text, ["accent", "accents", "highlight", "highlights", "words", "text", "headings", "heading", "titles", "title"]);
   const wantsYellow = includesAny(text, ["yellow", "gold", "amber"]);
   const wantsBlue = includesAny(text, ["blue", "navy", "midnight"]);
@@ -794,6 +807,15 @@ function buildRevisionPatch(revision = "") {
 
   const wantsAnyColor = wantsYellow || wantsBlue || wantsRed || wantsPurple || wantsTeal || wantsGreen || wantsOrange || wantsPink || wantsMonochrome || includesAny(text, ["white", "ivory", "black"]);
 
+  // Explicit dark/light requests that should affect the base palette.
+  const wantsDarkPalette = includesAny(text, ["dark palette", "keep palette dark", "make it dark", "darker", "dark mode"]) || (includesAny(text, ["palette", "theme"]) && text.includes("dark"));
+  const wantsLightPalette = includesAny(text, ["light palette", "make it light", "lighter", "light mode"]) || (includesAny(text, ["palette", "theme"]) && text.includes("light"));
+
+  if (!Object.keys(patch.palette || {}).length) {
+    if (wantsDarkPalette) patch.palette = paletteFor('dark', 'default');
+    if (wantsLightPalette) patch.palette = paletteFor('light', 'default');
+  }
+
   if (wantsAnyColor) {
     if (mentionsBackground) {
       // User asked to change the overall background/base.
@@ -802,6 +824,7 @@ function buildRevisionPatch(revision = "") {
       // Accent-only change: update amber + glow, leave base/surface alone.
       const accentPalette = paletteFor(revision, "default");
       patch.palette = {
+        ...(patch.palette || {}),
         amber: accentPalette.amber,
         glow: accentPalette.glow,
         border: accentPalette.border
@@ -1778,7 +1801,7 @@ function renderDefault(parsed, palette) {
 
   const layout = (parsed.layout || state.layout || "auto").toLowerCase();
   return `
-  <div class="portfolio ${isPlayful ? 'playful' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout} variant-${(parsed.visualPlan?.variant || 'base')}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
+  <div class="portfolio ${isPlayful ? 'playful' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} hero-${(parsed.visualPlan?.heroTreatment || 'classic')} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout} variant-${(parsed.visualPlan?.variant || 'base')}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
 
     <section class="hero-lite ${isPlayful ? 'hero-playful' : ''}">
       <div class="hero-lite-copy">
@@ -1883,6 +1906,23 @@ async function renderPortfolio() {
       contentPlan: state.lastPortfolio.contentPlan || null,
       visualPlan: state.lastPortfolio.visualPlan || null,
     } : null;
+
+    const keepBg = (() => {
+      const t = String(revision || '').toLowerCase();
+      if (!t) return false;
+      return includesAny(t, [
+        'keep the background',
+        'keep background',
+        'keep the current background',
+        'keep current background',
+        "don't change the background",
+        'do not change the background',
+        'leave the background',
+        'background should stay',
+        'keep the background colour',
+        'keep the background color',
+      ]);
+    })();
     const coerceArrayStrings = (v) => Array.isArray(v) ? v.map(x => String(x || '').trim()).filter(Boolean) : [];
     const coerceProjects = (v) => Array.isArray(v)
       ? v.map(normalizeProjectObject).filter(p => p && (p.title || p.desc || p.mediaUrl || p.linkUrl))
@@ -1978,7 +2018,14 @@ async function renderPortfolio() {
           }
         }
         // Ask LLM for style + layout plan only.
-        const plan = state.useLLM ? await llmGenerate(JSON.stringify(parsedCV), promptForLLM, state.useStream, prevStylePlan) : null;
+        let plan = state.useLLM ? await llmGenerate(JSON.stringify(parsedCV), promptForLLM, state.useStream, prevStylePlan) : null;
+
+        // Guardrail: if the revision explicitly says to keep the background,
+        // ignore any LLM-proposed base/surface palette changes.
+        if (keepBg && plan && typeof plan === 'object' && plan.palette && typeof plan.palette === 'object') {
+          const { amber, glow, border, steel, textMuted } = plan.palette;
+          plan.palette = { amber, glow, border, steel, textMuted };
+        }
         // Merge: keep content from parsedCV, take style fields from plan.
         parsed = {
           ...parsedCV,

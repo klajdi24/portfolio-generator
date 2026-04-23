@@ -206,6 +206,19 @@ a { color: inherit; }
     linear-gradient(135deg, rgba(255,255,255,0.9), rgba(238,241,255,0.8));
   box-shadow: 0 22px 60px rgba(25, 30, 60, 0.18);
 }
+
+/* Default-mode hero treatments */
+.hero-poster .hero-lite-art {
+  height: 360px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 20% 25%, var(--glow) 0%, transparent 52%),
+    radial-gradient(circle at 78% 70%, rgba(59,74,94,0.22) 0%, transparent 60%),
+    linear-gradient(140deg, rgba(255,255,255,0.05), transparent 40%),
+    linear-gradient(135deg, rgba(10,12,16,0.78), rgba(15,18,24,0.65));
+  box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+}
 .portfolio.playful .project-card { background: rgba(255,255,255,0.82); border-color: rgba(66,87,255,0.18); }
 .portfolio.playful .project-body p { color: rgba(20,22,42,0.85); }
 .portfolio.playful .section-header p,
@@ -563,6 +576,10 @@ textarea[readonly] { opacity: 0.85; }
 .project-card:hover { transform: translateY(-8px); box-shadow: 0 28px 60px rgba(0,0,0,0.45); border-color: var(--amber); }
 .project-card:active { transform: translateY(-4px) scale(0.995); }
 .card-clean .project-card { box-shadow: 0 12px 26px rgba(0,0,0,0.25); background: var(--surface); }
+.card-gallery .project-visual { height: 220px; }
+.card-gallery .project-card { box-shadow: 0 24px 70px rgba(0,0,0,0.42); }
+.card-gallery .project-body p { font-size: 15px; line-height: 1.55; }
+.card-gallery .project-meta { flex-direction: row; flex-wrap: wrap; gap: 10px; }
 .project-visual { height: 160px; background-image: var(--art-bg); background-size: 200% 200%; position: relative; border-bottom: 1px solid var(--border); }
 .portfolio.motion-dynamic .project-visual,
 .portfolio.motion-cinematic .project-visual,
