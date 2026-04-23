@@ -76,6 +76,35 @@ a { color: inherit; }
   margin-top: 10px;
 }
 
+.output-section {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: rgba(15,18,24,0.85);
+  box-shadow: var(--ui-shadow-soft);
+}
+
+.output-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.output-preview {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.10);
+}
+
+.output-preview .portfolio {
+  width: 100%;
+  max-width: none;
+}
+
 .flow-column {
   display: flex;
   flex-direction: column;

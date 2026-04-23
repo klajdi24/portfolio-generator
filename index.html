@@ -126,34 +126,10 @@
             </details>
           </section>
 
-          <section class="flow-card generate-step" id="stepGenerate">
-            <div class="card-head">
-              <h2>3. Generate your portfolio</h2>
-            </div>
-            <p class="help">Ready when your CV is provided and your prompt describes the style you want.</p>
-
-            <button type="button" id="generateBtn" class="generate-btn">Generate portfolio</button>
-
-            <details class="panel-details inline-advanced" id="moreControls">
-              <summary>
-                <div>
-                  <strong>After generation</strong>
-                  <div class="help">Optional: regenerate style or content without redoing uploads.</div>
-                </div>
-              </summary>
-              <div class="details-body">
-                <div class="row-actions" style="margin-top:12px;">
-                  <button type="button" id="regenStyleBtn" class="small-btn">Regenerate style</button>
-                  <button type="button" id="regenContentBtn" class="small-btn">Regenerate content</button>
-                </div>
-              </div>
-            </details>
-          </section>
-
           <details class="accordion-card" id="advancedPanel">
             <summary>
               <div>
-                <h2 style="margin:0;">Improve output with media and GitHub</h2>
+                <h2 style="margin:0;">3. Improve output with media and GitHub</h2>
                 <p class="help" style="margin:6px 0 0;">Optional: add images, videos, or GitHub projects for richer cards.</p>
                 <div class="accordion-meta" id="enrichMeta">No media added · GitHub not connected</div>
               </div>
@@ -195,10 +171,34 @@
             </div>
           </details>
 
+          <section class="flow-card generate-step" id="stepGenerate">
+            <div class="card-head">
+              <h2>4. Generate your portfolio</h2>
+            </div>
+            <p class="help">Ready when your CV is provided and your prompt describes the style you want.</p>
+
+            <button type="button" id="generateBtn" class="generate-btn">Generate portfolio</button>
+
+            <details class="panel-details inline-advanced" id="moreControls">
+              <summary>
+                <div>
+                  <strong>After generation</strong>
+                  <div class="help">Optional: regenerate style or content without redoing uploads.</div>
+                </div>
+              </summary>
+              <div class="details-body">
+                <div class="row-actions" style="margin-top:12px;">
+                  <button type="button" id="regenStyleBtn" class="small-btn">Regenerate style</button>
+                  <button type="button" id="regenContentBtn" class="small-btn">Regenerate content</button>
+                </div>
+              </div>
+            </details>
+          </section>
+
           <details class="accordion-card" id="refinePanel">
             <summary>
               <div>
-                <h2 style="margin:0;">Refine & polish (after generate)</h2>
+                <h2 style="margin:0;">5. Refine & polish (after generate)</h2>
                 <p class="help" style="margin:6px 0 0;">Ask for targeted improvements once you have a first draft.</p>
               </div>
             </summary>
@@ -220,7 +220,7 @@
           <details class="accordion-card" id="toolsPanel">
             <summary>
               <div>
-                <h2 style="margin:0;">Advanced checks and export tools</h2>
+                <h2 style="margin:0;">6. Advanced checks and export tools</h2>
                 <p class="help" style="margin:6px 0 0;">Optional: QA tools, model settings, and debug output.</p>
                 <div class="accordion-meta" id="toolsMeta">—</div>
               </div>
@@ -322,6 +322,19 @@
           </section>
         </aside>
       </div>
+
+      <section id="outputSection" class="output-section hidden" aria-label="Generated portfolio">
+        <div class="output-head">
+          <div>
+            <h2 style="margin:0;">Generated portfolio</h2>
+            <p class="help" style="margin:6px 0 0;">This is the full-width preview. You can export it using the tools above.</p>
+          </div>
+          <div class="output-actions">
+            <button type="button" id="backToBuilderBtn" class="small-btn">Back to builder</button>
+          </div>
+        </div>
+        <div id="outputPreview" class="output-preview"></div>
+      </section>
     </div>
   </div>
 

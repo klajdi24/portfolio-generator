@@ -2108,8 +2108,19 @@ async function renderPortfolio() {
     }
 
     qs("#extractInfo").textContent = planned.title;
-    qs("#preview").innerHTML = html;
-    qs("#preview").classList.remove("hidden");
+
+    // Full-width output (preferred UX)
+    const outSection = qs('#outputSection');
+    const outPreview = qs('#outputPreview');
+    if (outPreview) outPreview.innerHTML = html;
+    if (outSection) outSection.classList.remove('hidden');
+
+    // Keep the sidebar preview hidden to avoid a cramped "review box" render.
+    const sidebarPreview = qs('#preview');
+    if (sidebarPreview) {
+      sidebarPreview.innerHTML = "";
+      sidebarPreview.classList.add('hidden');
+    }
     qs("#emptyState").classList.add("hidden");
 
     // Enable exports only after we have something to export.
@@ -2134,7 +2145,11 @@ async function renderPortfolio() {
     // Update pre-flight based on the newly structured CV.
     renderPreflight();
 
-    qs("#preview").scrollIntoView({ behavior: (state.motion === 'subtle' ? 'auto' : 'smooth'), block: 'start' });
+    // Jump to the generated portfolio at the bottom of the page (matches earlier UX).
+    const scrollTarget = outSection || outPreview;
+    if (scrollTarget?.scrollIntoView) {
+      scrollTarget.scrollIntoView({ behavior: (state.motion === 'subtle' ? 'auto' : 'smooth'), block: 'start' });
+    }
 
     qs("#aiLog").innerHTML = `
       ${state.buildId ? `<p class="help">Build: ${state.buildId}</p>` : ''}
@@ -2167,6 +2182,11 @@ function init() {
   }
   const emptyState = qs("#emptyState");
   if (emptyState) emptyState.classList.remove("hidden");
+
+  // Hide the full-width output area until we generate.
+  try {
+    qs('#outputSection')?.classList.add('hidden');
+  } catch (e) {}
 
   const useSample = () => {
     const cvBox = qs("#cvText");
@@ -2426,6 +2446,12 @@ function init() {
 
   const exportZipBtn = qs("#exportZipBtn");
   if (exportZipBtn) exportZipBtn.addEventListener("click", async () => { await exportZIP(); });
+
+  // Convenience: jump back to the builder controls from the generated output.
+  qs('#backToBuilderBtn')?.addEventListener('click', () => {
+    qs('#stepCv')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    try { qs('#cvDropZone')?.focus?.(); } catch (e) {}
+  });
 
   const drop = qs('#dropZone');
   const picker = qs('#mediaFiles');
@@ -3071,7 +3097,8 @@ document.addEventListener('click', (e) => {
   const actionEl = t.closest?.('[data-action]');
   const action = actionEl?.dataset?.action;
   if (action === 'view-work') {
-    const anchor = qs('#preview')?.querySelector('#selected-work');
+    const root = qs('#outputPreview') || qs('#preview');
+    const anchor = root?.querySelector?.('#selected-work');
     if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
     e.preventDefault();
     return;
