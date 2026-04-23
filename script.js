@@ -2330,7 +2330,18 @@ function init() {
 
   if (cvDropZone) {
     const pickCv = () => { try { cvFile?.click?.(); } catch (e) {} };
-    cvDropZone.addEventListener('click', pickCv);
+
+    // Important: the "Choose file" control is a <label> wrapping the hidden input.
+    // Clicking it already opens the file picker natively. If we also handle the
+    // drop-zone click, some browsers (notably in hosted deployments) can trigger a
+    // second picker immediately after the first closes.
+    cvDropZone.addEventListener('click', (e) => {
+      try {
+        if (e?.target?.closest?.('label') || e?.target?.closest?.('input[type="file"]')) return;
+      } catch (err) {}
+      pickCv();
+    });
+
     cvDropZone.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
