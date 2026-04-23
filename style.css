@@ -470,7 +470,29 @@ textarea[readonly] { opacity: 0.85; }
 /* (removed cinematic intro effects for a calmer, more professional empty state) */
 
 /* Portfolio Render */
-.portfolio { color: var(--text); background: var(--base); padding: 40px 60px 80px; position: relative; overflow: hidden; }
+.portfolio {
+  color: var(--text);
+  background: var(--base);
+  padding: 40px 60px 80px;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-body, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+}
+.portfolio h1,
+.portfolio h2,
+.portfolio h3 {
+  font-family: var(--font-heading, var(--font-body, inherit));
+}
+
+/* Simple variant styles (adds visible variety without breaking templates) */
+.portfolio.variant-professional .project-card { border-radius: 12px; }
+.portfolio.variant-professional .hero-lite-copy h1 { font-size: 50px; letter-spacing: -0.02em; }
+
+.portfolio.variant-editorial .hero-lite-copy h1 { font-size: 58px; letter-spacing: -0.03em; }
+.portfolio.variant-editorial .section-header h2 { font-size: 28px; }
+
+.portfolio.variant-tech .project-card { border-style: dashed; }
+.portfolio.variant-tech .hero-kicker { letter-spacing: 0.28em; }
 .portfolio.cinematic::before { content: ""; position: absolute; inset: -12% -12%; background: radial-gradient(circle at 20% 20%, rgba(59,74,94,0.45), transparent 45%), radial-gradient(circle at 80% 20%, rgba(200,138,58,0.2), transparent 40%), radial-gradient(circle at 60% 80%, rgba(59,74,94,0.3), transparent 50%), linear-gradient(180deg, rgba(0,0,0,0.55), transparent 60%); pointer-events: none; opacity: var(--tone-shift, 0.9); filter: hue-rotate(var(--hue-shift, 0deg)); transition: filter 0.6s ease; }
 .portfolio.cinematic::after { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 1px, transparent 1px, transparent 3px); opacity: 0.16; pointer-events: none; filter: hue-rotate(var(--hue-shift, 0deg)); transition: filter 0.6s ease; }
 

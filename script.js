@@ -707,6 +707,21 @@ function buildRevisionPatch(revision = "") {
   if (!text) return null;
   const patch = { contentPlan: {}, visualPlan: {}, palette: {}, motion: null, layout: null };
 
+  // Professional / recruiter-friendly revision.
+  if (includesAny(text, ["professional", "recruiter", "ats", "hiring manager", "job application", "clean", "corporate"])) {
+    patch.layout = patch.layout || "recruiter";
+    patch.motion = patch.motion || "subtle";
+    patch.visualPlan.cardTreatment = patch.visualPlan.cardTreatment || "clean";
+    patch.visualPlan.spacing = patch.visualPlan.spacing || "normal";
+    patch.visualPlan.variant = patch.visualPlan.variant || "professional";
+  }
+
+  // Typography nudges.
+  if (includesAny(text, ["font", "fonts", "typography", "typeface"])) {
+    if (includesAny(text, ["serif", "editorial"])) patch.visualPlan.variant = patch.visualPlan.variant || "editorial";
+    if (includesAny(text, ["mono", "monospace", "terminal"])) patch.visualPlan.variant = patch.visualPlan.variant || "tech";
+  }
+
   if (includesAny(text, ["selected work first", "selected first", "emphasize selected"])) {
     patch.contentPlan.sectionOrder = ["selected", "process", "experience", "skills"];
   }
@@ -762,9 +777,36 @@ function buildRevisionPatch(revision = "") {
   if (includesAny(text, ["more motion", "dynamic motion", "more animations", "dynamic", "reactive", "interactive"])) {
     patch.motion = includesAny(text, ["extreme", "very dynamic", "lots of motion"]) ? "extreme" : "dynamic";
   }
-  const colorKeywords = ["red", "crimson", "blue", "teal", "purple", "amber", "gold", "black", "monochrome", "white", "ivory", "midnight"];
-  if (colorKeywords.some(k => text.includes(k))) {
-    patch.palette = paletteFor(revision, "default");
+
+  // Color handling: treat most colour revisions as ACCENT changes unless the user explicitly
+  // mentions the background/page/base. This prevents unintended base/background flips.
+  const mentionsBackground = includesAny(text, ["background", "bg", "page background", "base", "canvas", "page"]) && !includesAny(text, ["background noise", "grain", "grid"]);
+  const wantsAccentText = includesAny(text, ["accent", "accents", "highlight", "highlights", "words", "text", "headings", "heading", "titles", "title"]);
+  const wantsYellow = includesAny(text, ["yellow", "gold", "amber"]);
+  const wantsBlue = includesAny(text, ["blue", "navy", "midnight"]);
+  const wantsRed = includesAny(text, ["red", "crimson"]);
+  const wantsPurple = text.includes("purple");
+  const wantsTeal = text.includes("teal");
+  const wantsGreen = text.includes("green");
+  const wantsOrange = text.includes("orange");
+  const wantsPink = text.includes("pink");
+  const wantsMonochrome = includesAny(text, ["monochrome", "black and white", "black & white"]);
+
+  const wantsAnyColor = wantsYellow || wantsBlue || wantsRed || wantsPurple || wantsTeal || wantsGreen || wantsOrange || wantsPink || wantsMonochrome || includesAny(text, ["white", "ivory", "black"]);
+
+  if (wantsAnyColor) {
+    if (mentionsBackground) {
+      // User asked to change the overall background/base.
+      patch.palette = paletteFor(revision, "default");
+    } else if (wantsAccentText) {
+      // Accent-only change: update amber + glow, leave base/surface alone.
+      const accentPalette = paletteFor(revision, "default");
+      patch.palette = {
+        amber: accentPalette.amber,
+        glow: accentPalette.glow,
+        border: accentPalette.border
+      };
+    }
   }
   return patch;
 }
@@ -805,8 +847,8 @@ async function llmParse(rawText) {
   return data.data;
 }
 
-async function llmGenerate(cvText, prompt, stream = true) {
-  const payload = { cvText, prompt };
+async function llmGenerate(cvText, prompt, stream = true, previousPlan = null) {
+  const payload = previousPlan ? { cvText, prompt, previousPlan } : { cvText, prompt };
   if (stream) {
     const res = await fetch('/api/generate?stream=1', {
       method: 'POST',
@@ -1335,6 +1377,34 @@ function getProfessionFamily(parsed, prompt) {
   return "general";
 }
 
+function fontPlanFor(prompt = "", mode = "default", visualPlan = {}, family = "general") {
+  const text = String(prompt || "").toLowerCase();
+  const wantsEditorial =
+    mode === 'cinematic-dark' ||
+    visualPlan?.variant === 'artistic' ||
+    visualPlan?.variant === 'editorial' ||
+    includesAny(text, ["editorial", "serif", "magazine", "art book", "art-book", "poster", "studio"]);
+
+  const wantsTech =
+    family === 'developer' ||
+    visualPlan?.variant === 'tech' ||
+    includesAny(text, ["developer", "engineer", "terminal", "monospace", "mono", "code", "cli"]);
+
+  const wantsProfessional = includesAny(text, ["professional", "recruiter", "ats", "hiring manager", "clean", "minimal", "corporate"]);
+
+  const bodySans = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  const headingSans = bodySans;
+  const headingSerif = 'ui-serif, Georgia, "Times New Roman", Times, serif';
+  const headingMono = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+
+  let heading = headingSans;
+  if (wantsTech && !wantsEditorial) heading = headingMono;
+  if (wantsEditorial && !wantsTech) heading = headingSerif;
+  if (wantsProfessional && mode !== 'cinematic-dark') heading = headingSans;
+
+  return { body: bodySans, heading };
+}
+
 
 function parseProjectLine(line) {
   const clean = line.replace(/^[-•]\s*/, '').trim();
@@ -1600,6 +1670,7 @@ function renderCinematicSkills(parsed) {
 function renderCinematicPortfolio(parsed, palette) {
   const contentPlan = parsed.contentPlan || {};
   const visualPlan = parsed.visualPlan || {};
+  const fonts = fontPlanFor(state.prompt || '', 'cinematic-dark', visualPlan, state.family || 'general');
   const layout = (parsed.layout || state.layout || "auto").toLowerCase();
   const defaultOrder = ["selected", "process", "experience", "skills"];
   const layoutOrders = {
@@ -1629,7 +1700,7 @@ function renderCinematicPortfolio(parsed, palette) {
   const heroTreatment = visualPlan.heroTreatment || "classic";
 
   return `
-  <div class="portfolio cinematic motion-${state.motion || "cinematic"} card-${visualPlan.cardTreatment || "standard"} ${visualPlan.spacing === "spacious" ? "spacious" : ""} layout-${layout} variant-${variant} bg-grain-${bgGrain} bg-grid-${bgGrid} hero-${heroTreatment}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow}">
+  <div class="portfolio cinematic motion-${state.motion || "cinematic"} card-${visualPlan.cardTreatment || "standard"} ${visualPlan.spacing === "spacious" ? "spacious" : ""} layout-${layout} variant-${variant} bg-grain-${bgGrain} bg-grid-${bgGrid} hero-${heroTreatment}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
     <header class="portfolio-head">
       <div>
         <p class="summary">${summary}</p>
@@ -1649,6 +1720,7 @@ function renderDefault(parsed, palette) {
   const skills = parsed.skills || [];
   const experience = parsed.experience || [];
   const education = parsed.education || [];
+  const fonts = fontPlanFor(state.prompt || '', 'default', parsed.visualPlan || {}, state.family || 'general');
 
   const heroKicker = isPlayful ? (parsed.title || 'UX / Digital Media') : (parsed.title || 'Creative Portfolio');
   const heroSubtitle = isPlayful
@@ -1706,7 +1778,7 @@ function renderDefault(parsed, palette) {
 
   const layout = (parsed.layout || state.layout || "auto").toLowerCase();
   return `
-  <div class="portfolio ${isPlayful ? 'playful' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow}">
+  <div class="portfolio ${isPlayful ? 'playful' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout} variant-${(parsed.visualPlan?.variant || 'base')}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
 
     <section class="hero-lite ${isPlayful ? 'hero-playful' : ''}">
       <div class="hero-lite-copy">
@@ -1795,9 +1867,22 @@ async function renderPortfolio() {
       ? normalizeCvText(structuredToText(state.parsedCV))
       : (state.lastUploadWasPdf ? normalizeCvText(finalCV) : cvFromPlainText(finalCV));
     let parsed = null;
-    const promptForLLM = state.revision
-      ? `${state.prompt}\n\nRevision request: ${state.revision}\nReturn updated palette, motion, layout, contentPlan, visualPlan reflecting the revision.`
-      : state.prompt;
+    const basePrompt = state.prompt || '';
+    const revision = state.revision || '';
+    const promptForMode = revision ? `${basePrompt}\n${revision}` : basePrompt;
+    const promptForLLM = revision
+      ? `${basePrompt}\n\nRevision request: ${revision}\nReturn updated palette, motion, layout, contentPlan, visualPlan reflecting the revision.`
+      : basePrompt;
+
+    // When revising, preserve the existing look-and-feel as the baseline.
+    const prevStylePlan = revision && state.lastPortfolio ? {
+      motion: state.motion,
+      layout: state.layout,
+      palette: state.palette ? { ...state.palette } : null,
+      sectionOrder: state.lastPortfolio.sectionOrder || null,
+      contentPlan: state.lastPortfolio.contentPlan || null,
+      visualPlan: state.lastPortfolio.visualPlan || null,
+    } : null;
     const coerceArrayStrings = (v) => Array.isArray(v) ? v.map(x => String(x || '').trim()).filter(Boolean) : [];
     const coerceProjects = (v) => Array.isArray(v)
       ? v.map(normalizeProjectObject).filter(p => p && (p.title || p.desc || p.mediaUrl || p.linkUrl))
@@ -1893,7 +1978,7 @@ async function renderPortfolio() {
           }
         }
         // Ask LLM for style + layout plan only.
-        const plan = state.useLLM ? await llmGenerate(JSON.stringify(parsedCV), promptForLLM, state.useStream) : null;
+        const plan = state.useLLM ? await llmGenerate(JSON.stringify(parsedCV), promptForLLM, state.useStream, prevStylePlan) : null;
         // Merge: keep content from parsedCV, take style fields from plan.
         parsed = {
           ...parsedCV,
@@ -1912,15 +1997,34 @@ async function renderPortfolio() {
     } else {
       parsed = parseCV(normalizedCV);
     }
-    state.mode = parsed?.theme || state.stylePreset && stylePresets[state.stylePreset]?.mode || detectMode(promptForLLM, parsed);
-    let planned = applyPlans(parsed, promptForLLM, state.mode);
+    state.mode = parsed?.theme || state.stylePreset && stylePresets[state.stylePreset]?.mode || detectMode(promptForMode, parsed);
+    let planned = applyPlans(parsed, basePrompt, state.mode);
     planned = applyRevisionPatch(planned, state.revision);
     state.parsed = planned;
     state.lastPortfolio = planned;
     state.lastProjects = normalizeProjects(planned?.projects || []);
     state.revision = "";
     state.family = getProfessionFamily(planned, state.prompt);
-    const basePalette = state.stylePreset && stylePresets[state.stylePreset]?.palette ? stylePresets[state.stylePreset].palette : paletteFor(promptForLLM, state.mode);
+
+    // Guardrail: if the user revision is clearly about accent/highlight/text colour,
+    // do not allow the background/base palette to get replaced as a side-effect.
+    try {
+      const rev = String(revision || '').toLowerCase();
+      const mentionsBg = includesAny(rev, ["background", "bg", "page", "base", "canvas"]);
+      const mentionsAccent = includesAny(rev, ["accent", "accents", "highlight", "highlights", "text", "words", "headings", "heading", "titles", "title"]);
+      const mentionsColor = includesAny(rev, ["yellow", "gold", "amber", "blue", "navy", "midnight", "red", "crimson", "teal", "purple", "green", "orange", "pink", "white", "black", "ivory", "monochrome"]);
+      const accentOnly = !!rev && mentionsColor && mentionsAccent && !mentionsBg;
+      if (accentOnly && planned?.palette && typeof planned.palette === 'object') {
+        planned.palette = {
+          amber: planned.palette.amber,
+          glow: planned.palette.glow,
+          border: planned.palette.border,
+        };
+      }
+    } catch (e) {}
+    const basePalette = (revision && state.palette)
+      ? { ...state.palette }
+      : (state.stylePreset && stylePresets[state.stylePreset]?.palette ? stylePresets[state.stylePreset].palette : paletteFor(basePrompt, state.mode));
     const mergedPalette = planned?.palette ? { ...basePalette, ...planned.palette } : basePalette;
     state.palette = mergedPalette;
     const presetMotion = (state.stylePreset && stylePresets[state.stylePreset]?.motion) || null;

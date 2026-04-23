@@ -611,7 +611,7 @@ Rules:
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
-        const { cvText = '', prompt = '' } = JSON.parse(body || '{}');
+        const { cvText = '', prompt = '', previousPlan = null } = JSON.parse(body || '{}');
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -640,10 +640,18 @@ Quality rules:
 
 Revision handling:
 - If the style prompt includes a line starting with "Revision request:", treat it as highest priority and apply it.
+- If a "previous plan" is provided, treat it as the baseline and apply the revision as a minimal PATCH:
+  - Do NOT change the page/background/base colour unless the revision explicitly asks to change the background.
+  - If the revision asks to change highlight/text/accent colour (e.g. "make some words yellow"), update the accent (amber) only.
+  - Preserve unrelated choices (layout, section order, motion, spacing) unless the revision explicitly requests changes.
 - If revision asks for "more artistic/artsy/editorial", prefer: visualPlan.cardTreatment="gallery", visualPlan.heroTreatment="poster", visualPlan.spacing="spacious", visualPlan.background.grain=true.
 `;
 
-        const user = `CV JSON (for context only, do not rewrite):\n${cvText}\n\nStyle prompt:\n${prompt}\n\nPlan the style + layout only.`;
+        const prev = (previousPlan && typeof previousPlan === 'object')
+          ? `\n\nPrevious style plan (baseline JSON):\n${JSON.stringify(previousPlan)}`
+          : '';
+
+        const user = `CV JSON (for context only, do not rewrite):\n${cvText}\n\nStyle prompt:\n${prompt}${prev}\n\nPlan the style + layout only.`;
 
         const isStream = req.url.includes('stream=1');
         const payload = {
