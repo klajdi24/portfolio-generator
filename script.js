@@ -874,8 +874,8 @@ async function llmImproveFromCV(rawCvText, basePrompt, stream = true, strict = f
 
 async function exportHTML() {
   console.log('Export clicked');
-  const preview = qs('#preview');
-  if (!preview || preview.classList.contains('hidden')) {
+  const preview = qs('#outputPreview') || qs('#preview');
+  if (!preview || !String(preview.innerHTML || '').trim()) {
     alert('Generate a portfolio first.');
     return;
   }
@@ -1233,8 +1233,8 @@ function renderMediaAssignments() {
 }
 
 async function exportZIP() {
-  const preview = qs('#preview');
-  if (!preview || preview.classList.contains('hidden')) {
+  const preview = qs('#outputPreview') || qs('#preview');
+  if (!preview || !String(preview.innerHTML || '').trim()) {
     alert('Generate a portfolio first.');
     return;
   }
@@ -3120,9 +3120,6 @@ document.addEventListener('click', (e) => {
   if (t.classList?.contains('chip') && t.dataset?.prompt) {
     qs('#aiPrompt').value = t.dataset.prompt;
     state.prompt = t.dataset.prompt;
-  }
-  if (t.id === 'generateBtn') {
-    renderPortfolio();
   }
 });
 
