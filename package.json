@@ -5,6 +5,9 @@
   "description": "AI-assisted portfolio builder prototype (UFCFW3-30-3 Advanced Technologies)",
   "main": "server.js",
   "type": "commonjs",
+  "dependencies": {
+    "busboy": "^1.6.0"
+  },
   "scripts": {
     "start": "node server.js"
   },

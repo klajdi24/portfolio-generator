@@ -4,6 +4,7 @@ const path = require('path');
 const { Buffer } = require('buffer');
 const { spawn, spawnSync } = require('child_process');
 const { Readable } = require('stream');
+const Busboy = require('busboy');
 
 function loadEnv() {
   const candidates = [
@@ -90,6 +91,111 @@ function parseMultipart(req, boundary) {
       }
     });
     req.on('error', reject);
+  });
+}
+
+function parseIntSafe(v, fallback) {
+  const n = parseInt(String(v || ''), 10);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+const MAX_UPLOAD_BYTES = parseIntSafe(process.env.MAX_UPLOAD_BYTES, 25 * 1024 * 1024); // 25MB
+const MAX_PDF_BYTES = parseIntSafe(process.env.MAX_PDF_BYTES, 12 * 1024 * 1024); // 12MB
+
+function streamMultipartToDisk(req, { maxFileBytes, maxFiles = 12 } = {}) {
+  return new Promise((resolve, reject) => {
+    const bb = Busboy({
+      headers: req.headers,
+      limits: {
+        files: maxFiles,
+        fileSize: maxFileBytes,
+        fields: 50,
+        fieldSize: 256 * 1024
+      }
+    });
+
+    const files = [];
+    const fields = {};
+    const tasks = [];
+    let sizeLimited = false;
+    let filesLimited = false;
+    let errored = false;
+
+    bb.on('field', (name, val) => {
+      // Keep only small fields; Busboy already enforces fieldSize.
+      fields[name] = val;
+    });
+
+    bb.on('file', (fieldname, file, info) => {
+      const filename = info?.filename || '';
+      const mimeType = info?.mimeType || info?.mime || 'application/octet-stream';
+      if (!filename) {
+        file.resume();
+        return;
+      }
+
+      const fname = safeFilename(filename);
+      const id = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+      const storedName = `${id}-${fname}`;
+      const outPath = path.join(UPLOADS_DIR, storedName);
+
+      const ws = fs.createWriteStream(outPath);
+
+      const t = new Promise((resolveTask) => {
+        let done = false;
+
+        const finishOk = () => {
+          if (done) return;
+          done = true;
+          resolveTask({ ok: true, storedName, outPath, filename: fname, originalFilename: filename, mimeType });
+        };
+        const finishErr = (err) => {
+          if (done) return;
+          done = true;
+          try { ws.destroy(); } catch (e) {}
+          try { if (fs.existsSync(outPath)) fs.unlinkSync(outPath); } catch (e) {}
+          resolveTask({ ok: false, error: err ? String(err) : 'write_failed' });
+        };
+
+        file.on('limit', () => {
+          sizeLimited = true;
+          finishErr('file_too_large');
+        });
+        file.on('error', finishErr);
+        ws.on('error', finishErr);
+        ws.on('close', finishOk);
+
+        file.pipe(ws);
+      });
+
+      tasks.push(t);
+      files.push({ fieldname, storedName, outPath, mimeType, originalFilename: filename, safeOriginal: fname });
+    });
+
+    bb.on('filesLimit', () => { filesLimited = true; });
+    bb.on('error', (e) => {
+      errored = true;
+      reject(e);
+    });
+    bb.on('finish', async () => {
+      if (errored) return;
+      const results = await Promise.all(tasks);
+      const okFiles = results.filter(r => r && r.ok);
+      const bad = results.find(r => r && !r.ok);
+
+      if (sizeLimited) {
+        return resolve({ ok: false, status: 413, error: `File too large. Max ${(maxFileBytes / (1024 * 1024)).toFixed(0)}MB.` });
+      }
+      if (filesLimited) {
+        return resolve({ ok: false, status: 400, error: `Too many files. Max ${maxFiles}.` });
+      }
+      if (bad) {
+        return resolve({ ok: false, status: 500, error: 'Upload failed.' });
+      }
+      return resolve({ ok: true, fields, files: okFiles });
+    });
+
+    req.pipe(bb);
   });
 }
 
@@ -246,49 +352,47 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'POST' && req.url.startsWith('/api/upload')) {
     try {
-      const ct = req.headers['content-type'] || '';
-      const boundaryMatch = ct.match(/boundary=([^;]+)/i);
-      if (!boundaryMatch) {
-        res.writeHead(400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-        return res.end(JSON.stringify({ ok: false, error: 'Expected multipart/form-data' }));
+      const parsed = await streamMultipartToDisk(req, { maxFileBytes: MAX_UPLOAD_BYTES, maxFiles: 12 });
+      if (!parsed.ok) {
+        res.writeHead(parsed.status || 400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        return res.end(JSON.stringify({ ok: false, error: parsed.error || 'Upload failed' }));
       }
-      const boundary = boundaryMatch[1];
-      const form = await parseMultipart(req, boundary);
-      const filesField = form.files || form.file;
-      const files = Array.isArray(filesField) ? filesField : (filesField ? [filesField] : []);
-      if (!files.length) {
+      if (!parsed.files?.length) {
         res.writeHead(400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
         return res.end(JSON.stringify({ ok: false, error: 'Missing files' }));
       }
+
       const saved = [];
-      for (const f of files) {
-        if (!f?.data || !f?.filename) continue;
-        const fname = safeFilename(f.filename);
-        const id = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
-        const finalName = `${id}-${fname}`;
-        const outPath = path.join(UPLOADS_DIR, finalName);
-        fs.writeFileSync(outPath, f.data);
+      for (const f of parsed.files) {
+        const finalName = f.storedName;
+        const outPath = f.outPath;
 
         let url = `/uploads/${finalName}`;
-        let contentType = f.contentType || contentTypeForExt(path.extname(finalName).toLowerCase());
+        let contentType = f.mimeType || contentTypeForExt(path.extname(finalName).toLowerCase());
         let originalUrl = null;
         let displayName = finalName;
 
         // Best-effort: convert .mov to .mp4 for wider browser support.
-        if (isMovFile(finalName) && HAS_FFMPEG) {
-          const mp4Name = finalName.replace(/\.mov$/i, '.mp4');
-          const mp4Path = path.join(UPLOADS_DIR, mp4Name);
-          const ok = await transcodeMovToMp4(outPath, mp4Path);
-          if (ok && fs.existsSync(mp4Path)) {
-            originalUrl = url;
-            url = `/uploads/${mp4Name}`;
-            contentType = 'video/mp4';
-            displayName = mp4Name;
+        // Limit transcoding to small files to avoid OOM on small instances.
+        try {
+          const stat = fs.statSync(outPath);
+          const isSmallEnough = stat?.size && stat.size <= 25 * 1024 * 1024;
+          if (isMovFile(finalName) && HAS_FFMPEG && isSmallEnough) {
+            const mp4Name = finalName.replace(/\.mov$/i, '.mp4');
+            const mp4Path = path.join(UPLOADS_DIR, mp4Name);
+            const ok = await transcodeMovToMp4(outPath, mp4Path);
+            if (ok && fs.existsSync(mp4Path)) {
+              originalUrl = url;
+              url = `/uploads/${mp4Name}`;
+              contentType = 'video/mp4';
+              displayName = mp4Name;
+            }
           }
-        }
+        } catch (e) {}
 
         saved.push({ name: displayName, originalName: finalName, url, originalUrl, contentType });
       }
+
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
       return res.end(JSON.stringify({ ok: true, files: saved }));
     } catch (err) {
@@ -366,21 +470,19 @@ IMPORTANT:
         return res.end(JSON.stringify({ ok: false, error: 'OPENAI_API_KEY missing in .env.local' }));
       }
       const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-      const ct = req.headers['content-type'] || '';
-      const boundaryMatch = ct.match(/boundary=([^;]+)/i);
-      if (!boundaryMatch) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ ok: false, error: 'Expected multipart/form-data' }));
+      const parsed = await streamMultipartToDisk(req, { maxFileBytes: MAX_PDF_BYTES, maxFiles: 1 });
+      if (!parsed.ok) {
+        res.writeHead(parsed.status || 400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ ok: false, error: parsed.error || 'Upload failed' }));
       }
-      const boundary = boundaryMatch[1];
-      const form = await parseMultipart(req, boundary);
-      const file = form.file;
-      const prompt = (form.prompt || '').toString();
-      if (!file || !file.data) {
+      const prompt = (parsed.fields?.prompt || '').toString();
+      const fileInfo = parsed.files?.[0];
+      if (!fileInfo?.outPath) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ ok: false, error: 'Missing file field' }));
       }
-      const b64 = file.data.toString('base64');
+      const buf = fs.readFileSync(fileInfo.outPath);
+      const b64 = buf.toString('base64');
 
       // 1) Convert PDF directly into structured CV JSON.
       const improveSystem = `You repair extracted CV text.
@@ -408,6 +510,7 @@ Rules:
 - mediaUrl should be null (media is uploaded separately in the app).`;
       const improveUser = `Style context (optional):\n${prompt}\n\nPDF base64:\n${b64}`;
       const improved = await openaiChat({ apiKey, model, system: improveSystem, user: improveUser, temperature: 0.2 });
+      try { fs.unlinkSync(fileInfo.outPath); } catch (e) {}
       if (!improved.parsed) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ ok: false, error: 'Failed to parse improved CV JSON', raw: improved.raw }));
