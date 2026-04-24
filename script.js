@@ -696,6 +696,7 @@ async function loadPdfJs() {
       });
       if (window.pdfjsLib) {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = c.worker;
+        try { window.pdfjsLib.disableWorker = true; } catch (e) {}
         return window.pdfjsLib;
       }
     } catch (e) {
@@ -718,7 +719,9 @@ function cvFromPlainText(raw = "") {
 
 async function extractPdfText(arrayBuffer) {
   const pdfjsLib = await loadPdfJs();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  // Disable worker for maximum compatibility in locked-down environments where
+  // the worker script might be blocked.
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, disableWorker: true }).promise;
   // Reconstruct lines using text item positions (much better than a flat join).
   // This helps CVs retain section structure instead of becoming one long sentence.
   let out = '';
