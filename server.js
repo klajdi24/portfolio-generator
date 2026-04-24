@@ -99,7 +99,9 @@ function parseIntSafe(v, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-const MAX_UPLOAD_BYTES = parseIntSafe(process.env.MAX_UPLOAD_BYTES, 25 * 1024 * 1024); // 25MB
+// Media uploads: default higher than before now that we stream to disk (not memory).
+// Still bounded to keep free-tier instances safe.
+const MAX_UPLOAD_BYTES = parseIntSafe(process.env.MAX_UPLOAD_BYTES, 60 * 1024 * 1024); // 60MB
 const MAX_PDF_BYTES = parseIntSafe(process.env.MAX_PDF_BYTES, 12 * 1024 * 1024); // 12MB
 
 function streamMultipartToDisk(req, { maxFileBytes, maxFiles = 12 } = {}) {

@@ -1549,8 +1549,14 @@ async function uploadMediaFiles(files = []) {
   const fd = new FormData();
   for (const f of (files || [])) fd.append('files', f);
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error || 'Upload failed');
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    // Non-JSON response (proxy error, HTML error page, etc.)
+    throw new Error(`Upload failed (HTTP ${res.status}).`);
+  }
+  if (!res.ok || !data?.ok) throw new Error(data?.error || `Upload failed (HTTP ${res.status}).`);
   return data.files || [];
 }
 
@@ -2922,8 +2928,9 @@ function init() {
       renderMediaAssignments();
       setBanner('#mediaStatus', `Media: ${state.assets.length} file(s) uploaded`, 'ok');
     } catch (e) {
-      setBanner('#mediaStatus', 'Media: upload failed', 'error');
-      alert('Media upload failed.');
+      const msg = String(e?.message || e || 'Media upload failed.');
+      setBanner('#mediaStatus', `Media: ${msg}`, 'error');
+      alert(msg);
     } finally {
       // Reset input value so selecting the same file again still triggers `change`.
       try { if (picker) picker.value = ''; } catch (e) {}
