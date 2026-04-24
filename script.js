@@ -662,17 +662,49 @@ function cleanPdfCvText(raw = "") {
 
 async function loadPdfJs() {
   if (window.pdfjsLib) return window.pdfjsLib;
-  await new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    s.onload = () => resolve();
-    s.onerror = (e) => reject(e);
-    document.head.appendChild(s);
-  });
-  if (window.pdfjsLib) {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // PDF parsing is a critical path for the assignment. Some networks/adblockers
+  // intermittently block specific CDNs (e.g. cdnjs). So we try multiple sources.
+  const candidates = [
+    // Optional: if you later vendor these files, this becomes the fastest/most reliable.
+    { lib: '/vendor/pdfjs/pdf.min.js', worker: '/vendor/pdfjs/pdf.worker.min.js' },
+
+    // CDN fallbacks (same version)
+    {
+      lib: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+      worker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+    },
+    {
+      lib: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+      worker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+    },
+    {
+      lib: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js',
+      worker: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+    },
+  ];
+
+  let lastErr = null;
+  for (const c of candidates) {
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = c.lib;
+        s.onload = () => resolve();
+        s.onerror = (e) => reject(e);
+        document.head.appendChild(s);
+      });
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = c.worker;
+        return window.pdfjsLib;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
   }
-  return window.pdfjsLib;
+
+  // Give a more actionable error upstream.
+  throw new Error('PDF.js failed to load (possible adblock/network block).');
 }
 
 function cvFromPlainText(raw = "") {
@@ -2753,25 +2785,51 @@ function init() {
         if (genBtn) genBtn.disabled = true;
         const buf = await file.arrayBuffer();
         const raw = await extractPdfText(buf);
+        if (!raw || String(raw).trim().length < 40) {
+          throw new Error('No selectable text found in this PDF (it may be scanned or protected).');
+        }
         const cleaned = cleanPdfCvText(raw);
-        setBanner('#uploadStatus', 'Upload status: parsing with AI…', 'busy');
-        const improved = await llmImproveFromCV(cleaned, (qs('#aiPrompt')?.value || state.prompt || ''), false);
-        state.lastUploadWasPdf = true;
-        state.sampleActive = false;
-        state.parsedCV = ensureProjectObjects(improved);
-        const pretty = state.parsedCV ? JSON.stringify(state.parsedCV, null, 2) : cleaned;
-        qs('#cvText').value = pretty;
-        state.cvText = pretty;
-        state.rawCv = pretty;
-        setCvSourceNote('PDF parsed (structured)');
-        setBanner('#uploadStatus', `Upload status: PDF extracted + parsed (${String(pretty || '').length} chars)`, 'ok');
-        renderPreflight();
-        state.pdfParsing = false;
-        if (genBtn) genBtn.disabled = false;
-        return;
+
+        // AI repair can fail due to transient API/model formatting issues. If it fails,
+        // we still keep the extracted text so the user can proceed (Generate will re-parse).
+        try {
+          setBanner('#uploadStatus', 'Upload status: parsing with AI…', 'busy');
+          const improved = await llmImproveFromCV(cleaned, (qs('#aiPrompt')?.value || state.prompt || ''), false);
+          state.lastUploadWasPdf = true;
+          state.sampleActive = false;
+          state.parsedCV = ensureProjectObjects(improved);
+          const pretty = state.parsedCV ? JSON.stringify(state.parsedCV, null, 2) : cleaned;
+          qs('#cvText').value = pretty;
+          state.cvText = pretty;
+          state.rawCv = pretty;
+          setCvSourceNote('PDF parsed (structured)');
+          setBanner('#uploadStatus', `Upload status: PDF extracted + parsed (${String(pretty || '').length} chars)`, 'ok');
+          renderPreflight();
+          state.pdfParsing = false;
+          if (genBtn) genBtn.disabled = false;
+          return;
+        } catch (aiErr) {
+          console.warn('AI repair failed during PDF upload:', aiErr);
+          const msg = (aiErr && aiErr.message) ? aiErr.message : String(aiErr || 'AI repair failed');
+
+          // Fallback: populate textarea with extracted text, let user continue.
+          state.lastUploadWasPdf = false;
+          state.parsedCV = null;
+          qs('#cvText').value = cleaned;
+          state.cvText = cleaned;
+          state.rawCv = cleaned;
+          setCvSourceNote('PDF extracted text (AI repair failed)');
+          setBanner('#uploadStatus', `Upload status: PDF text extracted, but AI repair failed (${msg}). You can still click Generate.`, 'error');
+          renderPreflight();
+          state.pdfParsing = false;
+          if (genBtn) genBtn.disabled = false;
+          return;
+        }
       } catch (err) {
+        console.error('PDF parse failed:', err);
+        const msg = (err && err.message) ? err.message : String(err || 'unknown error');
         setBanner('#uploadStatus', 'Upload status: PDF parse failed', 'error');
-        alert('Could not parse PDF. Please try again or paste the text manually.');
+        alert(`Could not parse PDF.\n\nReason: ${msg}\n\nTry: disable adblock for this site, try another network/browser, or paste your CV text manually.`);
         state.pdfParsing = false;
         const genBtn = qs('#generateBtn');
         if (genBtn) genBtn.disabled = false;
