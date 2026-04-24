@@ -101,6 +101,159 @@ const FONT_PAIRS = [
     cssUrl: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap',
     body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     heading: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+  },
+
+  // Modern / tech variety
+  {
+    key: 'modern-outfit',
+    label: 'Modern: Outfit headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'modern-sora',
+    label: 'Modern: Sora headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Sora', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'modern-manrope',
+    label: 'Modern: Manrope headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'modern-urbanist',
+    label: 'Modern: Urbanist headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Urbanist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'tech-jetbrains-mono',
+    label: 'Tech: JetBrains Mono headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+  },
+  {
+    key: 'tech-fira-code',
+    label: 'Tech: Fira Code headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+  },
+  {
+    key: 'tech-space-mono',
+    label: 'Tech: Space Mono headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+  },
+
+  // Editorial / classic variety
+  {
+    key: 'editorial-dm-serif',
+    label: 'Editorial: DM Serif Display headings + DM Sans body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap',
+    body: "'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'DM Serif Display', ui-serif, Georgia, 'Times New Roman', Times, serif"
+  },
+  {
+    key: 'editorial-cormorant',
+    label: 'Editorial: Cormorant Garamond headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Cormorant Garamond', ui-serif, Georgia, 'Times New Roman', Times, serif"
+  },
+  {
+    key: 'editorial-libre-baskerville',
+    label: 'Classic: Libre Baskerville headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Libre Baskerville', ui-serif, Georgia, 'Times New Roman', Times, serif"
+  },
+  {
+    key: 'editorial-abril',
+    label: 'Display: Abril Fatface headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Abril Fatface', ui-serif, Georgia, 'Times New Roman', Times, serif"
+  },
+  {
+    key: 'editorial-cinzel',
+    label: 'Cinematic: Cinzel headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Cinzel', ui-serif, Georgia, 'Times New Roman', Times, serif"
+  },
+
+  // Street / poster / loud variety (for “show-off”)
+  {
+    key: 'street-bebas-neue',
+    label: 'Street poster: Bebas Neue headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Bebas Neue', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-anton',
+    label: 'Street bold: Anton headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Anton', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-oswald',
+    label: 'Poster: Oswald headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Oswald', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-barlow-condensed',
+    label: 'Poster: Barlow Condensed headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Barlow Condensed', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-black-ops',
+    label: 'Street: Black Ops One headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Black Ops One', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-rubik-dirt',
+    label: 'Graffiti-ish: Rubik Dirt headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Rubik Dirt', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-permanent-marker',
+    label: 'Handwritten: Permanent Marker headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Permanent Marker', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-bangers',
+    label: 'Comic/street: Bangers headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Bangers', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  },
+  {
+    key: 'street-rubik-glitch',
+    label: 'Glitch display: Rubik Glitch headings + Inter body',
+    cssUrl: 'https://fonts.googleapis.com/css2?family=Rubik+Glitch&family=Inter:wght@300;400;500;600;700;800&display=swap',
+    body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    heading: "'Rubik Glitch', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
   }
 ];
 
@@ -707,6 +860,31 @@ function buildContentPlan(parsed, prompt = "") {
 function buildVisualPlan(parsed, prompt = "", mode = "default") {
   const text = prompt.toLowerCase();
   const family = mode === "cinematic-dark" ? "cinematic-editorial" : "clean";
+
+  const backgroundStyle = (() => {
+    if (includesAny(text, ["aurora", "neon", "cyber", "electric", "glow", "gradient"])) return "aurora";
+    if (includesAny(text, ["mesh", "holographic"])) return "mesh";
+    if (includesAny(text, ["sunset", "dusk", "warm gradient"])) return "sunset";
+    if (includesAny(text, ["glitch", "crt", "scanlines"])) return "glitch";
+    if (includesAny(text, ["street", "graffiti", "poster", "urban"])) return "street";
+    return mode === "cinematic-dark" ? "aurora" : "studio";
+  })();
+
+  const animateBackground = includesAny(text, [
+    "dynamic background",
+    "animated background",
+    "moving background",
+    "shifting colours",
+    "shifting colors",
+    "changing colours",
+    "changing colors",
+    "gradient shift",
+    "colour cycle",
+    "color cycle",
+    "aurora",
+    "holographic"
+  ]);
+
   return {
     family,
     mood: includesAny(text, ["mysterious", "moody", "dark", "atmospheric"]) ? "moody" : "neutral",
@@ -716,9 +894,71 @@ function buildVisualPlan(parsed, prompt = "", mode = "default") {
     spacing: includesAny(text, ["generous", "spacious", "air", "negative space", "increase spacing"]) ? "spacious" : "normal",
     background: {
       grain: includesAny(text, ["grain", "film", "halftone"]) || mode === "cinematic-dark",
-      grid: includesAny(text, ["grid", "overlay", "editorial"]) || mode === "cinematic-dark"
+      grid: includesAny(text, ["grid", "overlay", "editorial"]) || mode === "cinematic-dark",
+      style: backgroundStyle,
+      animate: animateBackground
     }
   };
+}
+
+function backdropFor(palette, visualPlan = {}, mode = 'default') {
+  const bg = visualPlan?.background || {};
+  const style = String(bg.style || '').toLowerCase() || (mode === 'cinematic-dark' ? 'aurora' : 'studio');
+  const base = palette?.base || '#0f1012';
+  const glow = palette?.glow || 'rgba(240,184,75,0.20)';
+  const amber = palette?.amber || '#f0b84b';
+
+  // Helper tones.
+  const cool = 'rgba(90,134,255,0.16)';
+  const teal = 'rgba(76,201,176,0.14)';
+  const rose = 'rgba(255,122,195,0.10)';
+
+  if (style === 'mesh') {
+    return [
+      `radial-gradient(circle at 10% 20%, ${glow} 0%, transparent 55%)`,
+      `radial-gradient(circle at 75% 10%, ${cool} 0%, transparent 60%)`,
+      `radial-gradient(circle at 85% 65%, ${teal} 0%, transparent 55%)`,
+      `radial-gradient(circle at 35% 80%, ${rose} 0%, transparent 60%)`,
+      `linear-gradient(180deg, rgba(255,255,255,0.03), transparent 240px)`,
+      base
+    ].join(',');
+  }
+
+  if (style === 'sunset') {
+    return [
+      `linear-gradient(135deg, rgba(240,184,75,0.16) 0%, rgba(227,90,90,0.12) 35%, rgba(90,134,255,0.10) 80%)`,
+      `radial-gradient(circle at 20% 25%, ${glow} 0%, transparent 55%)`,
+      base
+    ].join(',');
+  }
+
+  if (style === 'glitch') {
+    return [
+      `repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 6px)`,
+      `radial-gradient(circle at 18% 22%, ${glow} 0%, transparent 55%)`,
+      `radial-gradient(circle at 78% 28%, ${cool} 0%, transparent 60%)`,
+      base
+    ].join(',');
+  }
+
+  if (style === 'street') {
+    return [
+      `linear-gradient(120deg, rgba(0,0,0,0.35) 0%, transparent 55%)`,
+      `repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 14px)`,
+      `radial-gradient(circle at 25% 18%, ${glow} 0%, transparent 55%)`,
+      `radial-gradient(circle at 78% 70%, rgba(240,184,75,0.10) 0%, transparent 60%)`,
+      base
+    ].join(',');
+  }
+
+  // studio / aurora default
+  return [
+    `linear-gradient(180deg, rgba(255,255,255,0.03), transparent 240px)`,
+    `radial-gradient(circle at 18% 22%, ${glow} 0%, transparent 55%)`,
+    `radial-gradient(circle at 78% 28%, rgba(90,134,255,0.12) 0%, transparent 60%)`,
+    `radial-gradient(circle at 60% 80%, rgba(76,201,176,0.10) 0%, transparent 60%)`,
+    base
+  ].join(',');
 }
 
 function normalizeProjects(projects = []) {
@@ -856,20 +1096,7 @@ function buildRevisionPatch(revision = "") {
     patch.visualPlan.background = { grain: true, grid: true };
     // Default to cinematic motion for "artistic" unless user explicitly asked for extreme.
     if (!includesAny(text, ["extreme", "more motion", "dynamic"])) patch.motion = patch.motion || "cinematic";
-    // Nudge palette towards higher-contrast editorial.
-    if (!Object.keys(patch.palette || {}).length) {
-      patch.palette = {
-        base: "#0f1115",
-        surface: "#151a21",
-        surfaceAlt: "#1b2430",
-        steel: "#425466",
-        amber: "#c88a3a",
-        text: "#f2eee8",
-        textMuted: "#b9b2aa",
-        border: "rgba(148,160,175,0.18)",
-        glow: "rgba(200,138,58,0.18)"
-      };
-    }
+    // Don't flip base/background colours unless the user explicitly asked for palette/background.
   }
   if (includesAny(text, ["increase spacing", "increased spacing", "more spacing", "more negative space", "spacious"])) {
     patch.visualPlan.spacing = "spacious";
@@ -977,11 +1204,11 @@ function revisionIntents(revision = '') {
     improveGeneral,
     changeLayout: includesAny(t, ['layout', 'case study', 'case-study', 'recruiter', 'showcase', 'editorial layout', 'grid', 'columns']),
     changeMotion: includesAny(t, ['motion', 'animation', 'animations', 'dynamic', 'playful', 'cinematic', 'extreme', 'reduce motion', 'less motion', 'no motion']),
-    changeTypography: includesAny(t, ['font', 'fonts', 'typography', 'typeface', 'serif', 'mono', 'monospace', 'editorial', 'professional']),
+    changeTypography: includesAny(t, ['font', 'fonts', 'typography', 'typeface', 'serif', 'mono', 'monospace', 'editorial', 'professional', 'street', 'urban', 'graffiti', 'poster', 'bold', 'condensed', 'display', 'handwritten', 'marker', 'glitch']),
     changeCards: includesAny(t, ['cards', 'project cards', 'gallery', 'visual-first', 'visual first', 'cinematic cards', 'clean cards', 'minimal cards', 'flat cards']),
     changeHero: includesAny(t, ['hero', 'poster', 'split hero', 'split-hero', 'headline']),
     changeSpacing: includesAny(t, ['spacing', 'whitespace', 'white space', 'negative space', 'spacious', 'air', 'padding']),
-    changeBackground: includesAny(t, ['background', 'bg', 'base', 'canvas', 'page background', 'page']) && !includesAny(t, ['keep the background', 'keep background', "don't change the background", 'do not change the background', 'leave the background', 'background should stay', 'keep the current background', 'keep current background']),
+    changeBackground: includesAny(t, ['background', 'bg', 'base', 'canvas', 'page background', 'page', 'dynamic background', 'animated background', 'moving background', 'gradient shift', 'changing colours', 'changing colors', 'shifting colours', 'shifting colors']) && !includesAny(t, ['keep the background', 'keep background', "don't change the background", 'do not change the background', 'leave the background', 'background should stay', 'keep the current background', 'keep current background']),
     keepBackground: includesAny(t, ['keep the background', 'keep background', 'keep the current background', 'keep current background', "don't change the background", 'do not change the background', 'leave the background', 'background should stay', 'keep the background colour', 'keep the background color']),
     changePalette: includesAny(t, ['palette', 'theme', 'colour scheme', 'color scheme']) || includesAny(t, ['more colourful', 'more colorful', 'more color', 'more colour']),
     wantsDark: includesAny(t, ['dark palette', 'keep palette dark', 'make it dark', 'darker', 'dark mode']) || (includesAny(t, ['palette', 'theme']) && t.includes('dark')),
@@ -1007,6 +1234,17 @@ function filterPlanByRevision(plan, prevPlan, intents) {
 
   // Fonts: preserve unless the revision is about typography or a general improvement.
   if (!intents.changeTypography && !allowQualityTweaks) out.fontPair = prevPlan.fontPair;
+
+  // Background style/animation: preserve unless explicitly requested.
+  if (!intents.changeBackground) {
+    const prevBg = prevPlan?.visualPlan?.background;
+    const nextVP = (out.visualPlan && typeof out.visualPlan === 'object') ? out.visualPlan : {};
+    const nextBg = (nextVP.background && typeof nextVP.background === 'object') ? nextVP.background : {};
+    if (prevBg && typeof prevBg === 'object') {
+      nextVP.background = { ...nextBg, style: prevBg.style, animate: prevBg.animate };
+      out.visualPlan = nextVP;
+    }
+  }
 
   // Palette: only allow base/background shifts if explicitly requested.
   // Default: preserve previous palette fully, but allow accent changes (amber/glow) and small legibility tweaks.
@@ -1924,10 +2162,13 @@ function renderCinematicPortfolio(parsed, palette) {
   const variant = visualPlan.variant || "base";
   const bgGrain = visualPlan.background?.grain ? "on" : "off";
   const bgGrid = visualPlan.background?.grid ? "on" : "off";
+  const bgStyle = String(visualPlan.background?.style || '').toLowerCase() || 'aurora';
+  const bgAnimate = !!visualPlan.background?.animate;
   const heroTreatment = visualPlan.heroTreatment || "classic";
+  const backdrop = backdropFor(palette, visualPlan, 'cinematic-dark');
 
   return `
-  <div class="portfolio cinematic ${visualPlan.accentText ? 'accent-text' : ''} motion-${state.motion || "cinematic"} card-${visualPlan.cardTreatment || "standard"} ${visualPlan.spacing === "spacious" ? "spacious" : ""} layout-${layout} variant-${variant} bg-grain-${bgGrain} bg-grid-${bgGrid} hero-${heroTreatment}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
+  <div class="portfolio cinematic ${visualPlan.accentText ? 'accent-text' : ''} motion-${state.motion || "cinematic"} card-${visualPlan.cardTreatment || "standard"} ${visualPlan.spacing === "spacious" ? "spacious" : ""} layout-${layout} variant-${variant} bg-grain-${bgGrain} bg-grid-${bgGrid} bg-${bgStyle} ${bgAnimate ? 'bg-animate' : ''} hero-${heroTreatment}" style="--base:${palette.base};--backdrop:${backdrop};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
     <header class="portfolio-head">
       <div>
         <p class="summary">${summary}</p>
@@ -2005,7 +2246,7 @@ function renderDefault(parsed, palette) {
 
   const layout = (parsed.layout || state.layout || "auto").toLowerCase();
   return `
-  <div class="portfolio ${isPlayful ? 'playful' : ''} ${(parsed.visualPlan?.accentText) ? 'accent-text' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} hero-${(parsed.visualPlan?.heroTreatment || 'classic')} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout} variant-${(parsed.visualPlan?.variant || 'base')}" style="--base:${palette.base};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
+  <div class="portfolio ${isPlayful ? 'playful' : ''} ${(parsed.visualPlan?.accentText) ? 'accent-text' : ''} motion-${state.motion || 'auto'} card-${(parsed.visualPlan?.cardTreatment || "standard")} hero-${(parsed.visualPlan?.heroTreatment || 'classic')} ${(parsed.visualPlan?.spacing === "spacious") ? "spacious" : ""} layout-${layout} variant-${(parsed.visualPlan?.variant || 'base')} bg-${String(parsed.visualPlan?.background?.style || '').toLowerCase() || 'studio'} ${parsed.visualPlan?.background?.animate ? 'bg-animate' : ''}" style="--base:${palette.base};--backdrop:${backdropFor(palette, parsed.visualPlan || {}, 'default')};--surface:${palette.surface};--surface-alt:${palette.surfaceAlt};--steel:${palette.steel};--amber:${palette.amber};--text:${palette.text};--text-muted:${palette.textMuted};--border:${palette.border};--glow:${palette.glow};--font-body:${fonts.body};--font-heading:${fonts.heading}">
 
     <section class="hero-lite ${isPlayful ? 'hero-playful' : ''}">
       <div class="hero-lite-copy">

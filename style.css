@@ -485,11 +485,24 @@ textarea[readonly] { opacity: 0.85; }
 /* Portfolio Render */
 .portfolio {
   color: var(--text);
-  background: var(--base);
+  background: var(--backdrop, var(--base));
+  background-repeat: no-repeat;
+  background-size: cover;
   padding: 40px 60px 80px;
   position: relative;
   overflow: hidden;
   font-family: var(--font-body, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+}
+
+.portfolio.bg-animate {
+  background-size: 220% 220%;
+  animation: backdropShift 18s ease-in-out infinite;
+}
+
+@keyframes backdropShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 .portfolio h1,
 .portfolio h2,

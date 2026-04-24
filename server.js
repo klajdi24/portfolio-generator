@@ -632,7 +632,7 @@ Constraints:
 - sectionOrder is an array like ["selected","process","experience","skills","education"].
 - palette must include keys: base, surface, surfaceAlt, steel, amber, text, textMuted, border, glow.
 - contentPlan: { sectionOrder, heroLabel, heroSubtitle, selectedIntro, processIntro, experienceIntro, skillsIntro, educationIntro }
-- visualPlan: { family, mood, layout, heroTreatment, cardTreatment, spacing, background:{grain, grid} }
+- visualPlan: { family, mood, layout, heroTreatment, cardTreatment, spacing, background:{grain, grid, style, animate} }
 
 Font rules:
 - You MUST set fontPair to one of the provided fontPair keys (you will be given a list in the user prompt).
@@ -641,6 +641,10 @@ Font rules:
 Palette rules:
 - Default to a dark, premium portfolio palette (base/background dark).
 - Only choose a light/white background if the user explicitly asks for light/white/bright.
+
+Background variety rules:
+- You may set visualPlan.background.style to one of: studio, aurora, mesh, sunset, glitch, street.
+- Set visualPlan.background.animate=true only if the user asks for an animated/dynamic/moving background.
 
 Quality rules:
 - Be specific to the style prompt.
